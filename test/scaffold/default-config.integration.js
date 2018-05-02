@@ -6,18 +6,18 @@ var sinon = require('sinon');
 var proxyquire = require('proxyquire');
 
 describe('#defaultConfig', function() {
-  var expectedExecPath = path.resolve(__dirname, '../../bin/qtumd');
+  var expectedExecPath = path.resolve(__dirname, '../../bin/recryptd');
 
   it('will return expected configuration', function() {
     var config = JSON.stringify({
       network: 'livenet',
       port: 3001,
       services: [
-        'qtumd',
+        'recryptd',
         'web'
       ],
       servicesConfig: {
-        qtumd: {
+        recryptd: {
           spawn: {
             datadir: process.env.HOME + '/.bitcore/data',
             exec: expectedExecPath
@@ -45,24 +45,24 @@ describe('#defaultConfig', function() {
     info.path.should.equal(home + '/.bitcore');
     info.config.network.should.equal('livenet');
     info.config.port.should.equal(3001);
-    info.config.services.should.deep.equal(['qtumd', 'web']);
-    var qtumd = info.config.servicesConfig.qtumd;
-    should.exist(qtumd);
-    qtumd.spawn.datadir.should.equal(home + '/.bitcore/data');
-    qtumd.spawn.exec.should.equal(expectedExecPath);
+    info.config.services.should.deep.equal(['recryptd', 'web']);
+    var recryptd = info.config.servicesConfig.recryptd;
+    should.exist(recryptd);
+    recryptd.spawn.datadir.should.equal(home + '/.bitcore/data');
+    recryptd.spawn.exec.should.equal(expectedExecPath);
   });
   it('will include additional services', function() {
     var config = JSON.stringify({
       network: 'livenet',
       port: 3001,
       services: [
-        'qtumd',
+        'recryptd',
         'web',
         'insight-api',
         'insight-ui'
       ],
       servicesConfig: {
-        qtumd: {
+        recryptd: {
           spawn: {
             datadir: process.env.HOME + '/.bitcore/data',
             exec: expectedExecPath
@@ -93,14 +93,14 @@ describe('#defaultConfig', function() {
     info.config.network.should.equal('livenet');
     info.config.port.should.equal(3001);
     info.config.services.should.deep.equal([
-      'qtumd',
+      'recryptd',
       'web',
       'insight-api',
       'insight-ui'
     ]);
-    var qtumd = info.config.servicesConfig.qtumd;
-    should.exist(qtumd);
-      qtumd.spawn.datadir.should.equal(home + '/.qtum/data');
-      qtumd.spawn.exec.should.equal(expectedExecPath);
+    var recryptd = info.config.servicesConfig.recryptd;
+    should.exist(recryptd);
+      recryptd.spawn.datadir.should.equal(home + '/.recrypt/data');
+      recryptd.spawn.exec.should.equal(expectedExecPath);
   });
 });

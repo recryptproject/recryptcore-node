@@ -4,9 +4,9 @@ var path = require('path');
 var async = require('async');
 var spawn = require('child_process').spawn;
 
-var BitcoinRPC = require('qtumd-rpc');
+var BitcoinRPC = require('recryptd-rpc');
 var rimraf = require('rimraf');
-var bitcore = require('qtumcore-lib');
+var bitcore = require('recryptcore-lib');
 var chai = require('chai');
 var should = chai.should();
 
@@ -19,7 +19,7 @@ var BitcoinService = index.services.Bitcoin;
 describe('Bitcoin Cluster', function() {
   var node;
   var daemons = [];
-  var execPath = path.resolve(__dirname, '../bin/qtumd');
+  var execPath = path.resolve(__dirname, '../bin/recryptd');
   var nodesConf = [
     {
       datadir: path.resolve(__dirname, './data/node1'),
@@ -51,7 +51,7 @@ describe('Bitcoin Cluster', function() {
   ];
 
   before(function(done) {
-    log.info('Starting 3 qtumd daemons');
+    log.info('Starting 3 recryptd daemons');
     this.timeout(60000);
     async.each(nodesConf, function(nodeConf, next) {
       var opts = [
@@ -96,20 +96,20 @@ describe('Bitcoin Cluster', function() {
     }, 1000);
   });
 
-  it('step 1: will connect to three qtumd daemons', function(done) {
+  it('step 1: will connect to three recryptd daemons', function(done) {
     this.timeout(20000);
     var configuration = {
       network: 'regtest',
       services: [
         {
-          name: 'qtumd',
+          name: 'recryptd',
           module: BitcoinService,
           config: {
             connect: [
               {
                 rpchost: '127.0.0.1',
                 rpcport: 30521,
-                rpcuser: 'qtumd',
+                rpcuser: 'recryptd',
                 rpcpassword: 'local321',
                 zmqpubrawtx: 'tcp://127.0.0.1:30611'
               },
@@ -156,7 +156,7 @@ describe('Bitcoin Cluster', function() {
 
   it('step 2: receive block events', function(done) {
     this.timeout(10000);
-    node.services.qtumd.once('tip', function(height) {
+    node.services.recryptd.once('tip', function(height) {
       height.should.equal(1);
       done();
     });

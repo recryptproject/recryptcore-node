@@ -6,7 +6,7 @@ var path = require('path');
 var EventEmitter = require('events').EventEmitter;
 var should = require('chai').should();
 var crypto = require('crypto');
-var bitcore = require('qtumcore-lib');
+var bitcore = require('recryptcore-lib');
 var _ = bitcore.deps._;
 var sinon = require('sinon');
 var proxyquire = require('proxyquire');
@@ -19,7 +19,7 @@ var errors = index.errors;
 
 var Transaction = bitcore.Transaction;
 var readFileSync = sinon.stub().returns(fs.readFileSync(path.resolve(__dirname, '../data/bitcoin.conf')));
-var BitcoinService = proxyquire('../../lib/services/qtumd', {
+var BitcoinService = proxyquire('../../lib/services/recryptd', {
   fs: {
     readFileSync: readFileSync
   }
@@ -41,41 +41,41 @@ describe('Bitcoin Service', function() {
 
   describe('@constructor', function() {
     it('will create an instance', function() {
-      var qtumd = new BitcoinService(baseConfig);
-      should.exist(qtumd);
+      var recryptd = new BitcoinService(baseConfig);
+      should.exist(recryptd);
     });
     it('will create an instance without `new`', function() {
-      var qtumd = BitcoinService(baseConfig);
-      should.exist(qtumd);
+      var recryptd = BitcoinService(baseConfig);
+      should.exist(recryptd);
     });
     it('will init caches', function() {
-      var qtumd = new BitcoinService(baseConfig);
-      should.exist(qtumd.utxosCache);
-      should.exist(qtumd.txidsCache);
-      should.exist(qtumd.balanceCache);
-      should.exist(qtumd.summaryCache);
-      should.exist(qtumd.transactionDetailedCache);
+      var recryptd = new BitcoinService(baseConfig);
+      should.exist(recryptd.utxosCache);
+      should.exist(recryptd.txidsCache);
+      should.exist(recryptd.balanceCache);
+      should.exist(recryptd.summaryCache);
+      should.exist(recryptd.transactionDetailedCache);
 
-      should.exist(qtumd.transactionCache);
-      should.exist(qtumd.rawTransactionCache);
-      should.exist(qtumd.blockCache);
-      should.exist(qtumd.rawBlockCache);
-      should.exist(qtumd.blockHeaderCache);
-      should.exist(qtumd.zmqKnownTransactions);
-      should.exist(qtumd.zmqKnownBlocks);
-      should.exist(qtumd.lastTip);
-      should.exist(qtumd.lastTipTimeout);
+      should.exist(recryptd.transactionCache);
+      should.exist(recryptd.rawTransactionCache);
+      should.exist(recryptd.blockCache);
+      should.exist(recryptd.rawBlockCache);
+      should.exist(recryptd.blockHeaderCache);
+      should.exist(recryptd.zmqKnownTransactions);
+      should.exist(recryptd.zmqKnownBlocks);
+      should.exist(recryptd.lastTip);
+      should.exist(recryptd.lastTipTimeout);
     });
     it('will init clients', function() {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.nodes.should.deep.equal([]);
-      qtumd.nodesIndex.should.equal(0);
-      qtumd.nodes.push({client: sinon.stub()});
-      should.exist(qtumd.client);
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.nodes.should.deep.equal([]);
+      recryptd.nodesIndex.should.equal(0);
+      recryptd.nodes.push({client: sinon.stub()});
+      should.exist(recryptd.client);
     });
     it('will set subscriptions', function() {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.subscriptions.should.deep.equal({
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.subscriptions.should.deep.equal({
         address: {},
         rawtransaction: [],
         hashblock: []
@@ -85,11 +85,11 @@ describe('Bitcoin Service', function() {
 
   describe('#_initDefaults', function() {
     it('will set transaction concurrency', function() {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd._initDefaults({transactionConcurrency: 10});
-      qtumd.transactionConcurrency.should.equal(10);
-      qtumd._initDefaults({});
-      qtumd.transactionConcurrency.should.equal(5);
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd._initDefaults({transactionConcurrency: 10});
+      recryptd.transactionConcurrency.should.equal(10);
+      recryptd._initDefaults({});
+      recryptd.transactionConcurrency.should.equal(5);
     });
   });
 
@@ -101,8 +101,8 @@ describe('Bitcoin Service', function() {
 
   describe('#getAPIMethods', function() {
     it('will return spec', function() {
-      var qtumd = new BitcoinService(baseConfig);
-      var methods = qtumd.getAPIMethods();
+      var recryptd = new BitcoinService(baseConfig);
+      var methods = recryptd.getAPIMethods();
       should.exist(methods);
       methods.length.should.equal(21);
     });
@@ -110,44 +110,44 @@ describe('Bitcoin Service', function() {
 
   describe('#getPublishEvents', function() {
     it('will return spec', function() {
-      var qtumd = new BitcoinService(baseConfig);
-      var events = qtumd.getPublishEvents();
+      var recryptd = new BitcoinService(baseConfig);
+      var events = recryptd.getPublishEvents();
       should.exist(events);
       events.length.should.equal(3);
-      events[0].name.should.equal('qtumd/rawtransaction');
-      events[0].scope.should.equal(qtumd);
+      events[0].name.should.equal('recryptd/rawtransaction');
+      events[0].scope.should.equal(recryptd);
       events[0].subscribe.should.be.a('function');
       events[0].unsubscribe.should.be.a('function');
-      events[1].name.should.equal('qtumd/hashblock');
-      events[1].scope.should.equal(qtumd);
+      events[1].name.should.equal('recryptd/hashblock');
+      events[1].scope.should.equal(recryptd);
       events[1].subscribe.should.be.a('function');
       events[1].unsubscribe.should.be.a('function');
-      events[2].name.should.equal('qtumd/addresstxid');
-      events[2].scope.should.equal(qtumd);
+      events[2].name.should.equal('recryptd/addresstxid');
+      events[2].scope.should.equal(recryptd);
       events[2].subscribe.should.be.a('function');
       events[2].unsubscribe.should.be.a('function');
     });
     it('will call subscribe/unsubscribe with correct args', function() {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.subscribe = sinon.stub();
-      qtumd.unsubscribe = sinon.stub();
-      var events = qtumd.getPublishEvents();
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.subscribe = sinon.stub();
+      recryptd.unsubscribe = sinon.stub();
+      var events = recryptd.getPublishEvents();
 
       events[0].subscribe('test');
-      qtumd.subscribe.args[0][0].should.equal('rawtransaction');
-      qtumd.subscribe.args[0][1].should.equal('test');
+      recryptd.subscribe.args[0][0].should.equal('rawtransaction');
+      recryptd.subscribe.args[0][1].should.equal('test');
 
       events[0].unsubscribe('test');
-      qtumd.unsubscribe.args[0][0].should.equal('rawtransaction');
-      qtumd.unsubscribe.args[0][1].should.equal('test');
+      recryptd.unsubscribe.args[0][0].should.equal('rawtransaction');
+      recryptd.unsubscribe.args[0][1].should.equal('test');
 
       events[1].subscribe('test');
-      qtumd.subscribe.args[1][0].should.equal('hashblock');
-      qtumd.subscribe.args[1][1].should.equal('test');
+      recryptd.subscribe.args[1][0].should.equal('hashblock');
+      recryptd.subscribe.args[1][1].should.equal('test');
 
       events[1].unsubscribe('test');
-      qtumd.unsubscribe.args[1][0].should.equal('hashblock');
-      qtumd.unsubscribe.args[1][1].should.equal('test');
+      recryptd.unsubscribe.args[1][0].should.equal('hashblock');
+      recryptd.unsubscribe.args[1][1].should.equal('test');
     });
   });
 
@@ -160,14 +160,14 @@ describe('Bitcoin Service', function() {
       sandbox.restore();
     });
     it('will push to subscriptions', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var emitter = {};
-      qtumd.subscribe('hashblock', emitter);
-      qtumd.subscriptions.hashblock[0].should.equal(emitter);
+      recryptd.subscribe('hashblock', emitter);
+      recryptd.subscriptions.hashblock[0].should.equal(emitter);
 
       var emitter2 = {};
-      qtumd.subscribe('rawtransaction', emitter2);
-      qtumd.subscriptions.rawtransaction[0].should.equal(emitter2);
+      recryptd.subscribe('rawtransaction', emitter2);
+      recryptd.subscriptions.rawtransaction[0].should.equal(emitter2);
     });
   });
 
@@ -180,34 +180,34 @@ describe('Bitcoin Service', function() {
       sandbox.restore();
     });
     it('will remove item from subscriptions', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var emitter1 = {};
       var emitter2 = {};
       var emitter3 = {};
       var emitter4 = {};
       var emitter5 = {};
-      qtumd.subscribe('hashblock', emitter1);
-      qtumd.subscribe('hashblock', emitter2);
-      qtumd.subscribe('hashblock', emitter3);
-      qtumd.subscribe('hashblock', emitter4);
-      qtumd.subscribe('hashblock', emitter5);
-      qtumd.subscriptions.hashblock.length.should.equal(5);
+      recryptd.subscribe('hashblock', emitter1);
+      recryptd.subscribe('hashblock', emitter2);
+      recryptd.subscribe('hashblock', emitter3);
+      recryptd.subscribe('hashblock', emitter4);
+      recryptd.subscribe('hashblock', emitter5);
+      recryptd.subscriptions.hashblock.length.should.equal(5);
 
-      qtumd.unsubscribe('hashblock', emitter3);
-      qtumd.subscriptions.hashblock.length.should.equal(4);
-      qtumd.subscriptions.hashblock[0].should.equal(emitter1);
-      qtumd.subscriptions.hashblock[1].should.equal(emitter2);
-      qtumd.subscriptions.hashblock[2].should.equal(emitter4);
-      qtumd.subscriptions.hashblock[3].should.equal(emitter5);
+      recryptd.unsubscribe('hashblock', emitter3);
+      recryptd.subscriptions.hashblock.length.should.equal(4);
+      recryptd.subscriptions.hashblock[0].should.equal(emitter1);
+      recryptd.subscriptions.hashblock[1].should.equal(emitter2);
+      recryptd.subscriptions.hashblock[2].should.equal(emitter4);
+      recryptd.subscriptions.hashblock[3].should.equal(emitter5);
     });
     it('will not remove item an already unsubscribed item', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var emitter1 = {};
       var emitter3 = {};
-      qtumd.subscriptions.hashblock= [emitter1];
-      qtumd.unsubscribe('hashblock', emitter3);
-      qtumd.subscriptions.hashblock.length.should.equal(1);
-      qtumd.subscriptions.hashblock[0].should.equal(emitter1);
+      recryptd.subscriptions.hashblock= [emitter1];
+      recryptd.unsubscribe('hashblock', emitter3);
+      recryptd.subscriptions.hashblock.length.should.equal(1);
+      recryptd.subscriptions.hashblock[0].should.equal(emitter1);
     });
   });
 
@@ -220,33 +220,33 @@ describe('Bitcoin Service', function() {
       sandbox.restore();
     });
     it('will not an invalid address', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var emitter = new EventEmitter();
-      qtumd.subscribeAddress(emitter, ['invalidaddress']);
-      should.not.exist(qtumd.subscriptions.address['invalidaddress']);
+      recryptd.subscribeAddress(emitter, ['invalidaddress']);
+      should.not.exist(recryptd.subscriptions.address['invalidaddress']);
     });
     it('will add a valid address', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var emitter = new EventEmitter();
-      qtumd.subscribeAddress(emitter, ['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
-      should.exist(qtumd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
+      recryptd.subscribeAddress(emitter, ['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
+      should.exist(recryptd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
     });
     it('will handle multiple address subscribers', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var emitter1 = new EventEmitter();
       var emitter2 = new EventEmitter();
-      qtumd.subscribeAddress(emitter1, ['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
-      qtumd.subscribeAddress(emitter2, ['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
-      should.exist(qtumd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
-      qtumd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'].length.should.equal(2);
+      recryptd.subscribeAddress(emitter1, ['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
+      recryptd.subscribeAddress(emitter2, ['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
+      should.exist(recryptd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
+      recryptd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'].length.should.equal(2);
     });
     it('will not add the same emitter twice', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var emitter1 = new EventEmitter();
-      qtumd.subscribeAddress(emitter1, ['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
-      qtumd.subscribeAddress(emitter1, ['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
-      should.exist(qtumd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
-      qtumd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'].length.should.equal(1);
+      recryptd.subscribeAddress(emitter1, ['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
+      recryptd.subscribeAddress(emitter1, ['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
+      should.exist(recryptd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
+      recryptd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'].length.should.equal(1);
     });
   });
 
@@ -259,61 +259,61 @@ describe('Bitcoin Service', function() {
       sandbox.restore();
     });
     it('it will remove a subscription', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var emitter1 = new EventEmitter();
       var emitter2 = new EventEmitter();
-      qtumd.subscribeAddress(emitter1, ['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
-      qtumd.subscribeAddress(emitter2, ['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
-      should.exist(qtumd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
-      qtumd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'].length.should.equal(2);
-      qtumd.unsubscribeAddress(emitter1, ['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
-      qtumd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'].length.should.equal(1);
+      recryptd.subscribeAddress(emitter1, ['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
+      recryptd.subscribeAddress(emitter2, ['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
+      should.exist(recryptd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
+      recryptd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'].length.should.equal(2);
+      recryptd.unsubscribeAddress(emitter1, ['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
+      recryptd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'].length.should.equal(1);
     });
     it('will unsubscribe subscriptions for an emitter', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var emitter1 = new EventEmitter();
       var emitter2 = new EventEmitter();
-      qtumd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'] = [emitter1, emitter2];
-      qtumd.unsubscribeAddress(emitter1);
-      qtumd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'].length.should.equal(1);
+      recryptd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'] = [emitter1, emitter2];
+      recryptd.unsubscribeAddress(emitter1);
+      recryptd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'].length.should.equal(1);
     });
     it('will NOT unsubscribe subscription with missing address', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var emitter1 = new EventEmitter();
       var emitter2 = new EventEmitter();
-      qtumd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'] = [emitter1, emitter2];
-      qtumd.unsubscribeAddress(emitter1, ['1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo']);
-      qtumd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'].length.should.equal(2);
+      recryptd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'] = [emitter1, emitter2];
+      recryptd.unsubscribeAddress(emitter1, ['1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo']);
+      recryptd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'].length.should.equal(2);
     });
     it('will NOT unsubscribe subscription with missing emitter', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var emitter1 = new EventEmitter();
       var emitter2 = new EventEmitter();
-      qtumd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'] = [emitter2];
-      qtumd.unsubscribeAddress(emitter1, ['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
-      qtumd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'].length.should.equal(1);
-      qtumd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'][0].should.equal(emitter2);
+      recryptd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'] = [emitter2];
+      recryptd.unsubscribeAddress(emitter1, ['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
+      recryptd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'].length.should.equal(1);
+      recryptd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'][0].should.equal(emitter2);
     });
     it('will remove empty addresses', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var emitter1 = new EventEmitter();
       var emitter2 = new EventEmitter();
-      qtumd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'] = [emitter1, emitter2];
-      qtumd.unsubscribeAddress(emitter1, ['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
-      qtumd.unsubscribeAddress(emitter2, ['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
-      should.not.exist(qtumd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
+      recryptd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'] = [emitter1, emitter2];
+      recryptd.unsubscribeAddress(emitter1, ['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
+      recryptd.unsubscribeAddress(emitter2, ['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
+      should.not.exist(recryptd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br']);
     });
     it('will unsubscribe emitter for all addresses', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var emitter1 = new EventEmitter();
       var emitter2 = new EventEmitter();
-      qtumd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'] = [emitter1, emitter2];
-      qtumd.subscriptions.address['1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo'] = [emitter1, emitter2];
-      sinon.spy(qtumd, 'unsubscribeAddressAll');
-      qtumd.unsubscribeAddress(emitter1);
-      qtumd.unsubscribeAddressAll.callCount.should.equal(1);
-      qtumd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'].length.should.equal(1);
-      qtumd.subscriptions.address['1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo'].length.should.equal(1);
+      recryptd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'] = [emitter1, emitter2];
+      recryptd.subscriptions.address['1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo'] = [emitter1, emitter2];
+      sinon.spy(recryptd, 'unsubscribeAddressAll');
+      recryptd.unsubscribeAddress(emitter1);
+      recryptd.unsubscribeAddressAll.callCount.should.equal(1);
+      recryptd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'].length.should.equal(1);
+      recryptd.subscriptions.address['1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo'].length.should.equal(1);
     });
   });
 
@@ -326,25 +326,25 @@ describe('Bitcoin Service', function() {
       sandbox.restore();
     });
     it('will unsubscribe emitter for all addresses', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var emitter1 = new EventEmitter();
       var emitter2 = new EventEmitter();
-      qtumd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'] = [emitter1, emitter2];
-      qtumd.subscriptions.address['1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo'] = [emitter1, emitter2];
-      qtumd.subscriptions.address['mgY65WSfEmsyYaYPQaXhmXMeBhwp4EcsQW'] = [emitter2];
-      qtumd.subscriptions.address['3CMNFxN1oHBc4R1EpboAL5yzHGgE611Xou'] = [emitter1];
-      qtumd.unsubscribeAddress(emitter1);
-      qtumd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'].length.should.equal(1);
-      qtumd.subscriptions.address['1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo'].length.should.equal(1);
-      qtumd.subscriptions.address['mgY65WSfEmsyYaYPQaXhmXMeBhwp4EcsQW'].length.should.equal(1);
-      should.not.exist(qtumd.subscriptions.address['3CMNFxN1oHBc4R1EpboAL5yzHGgE611Xou']);
+      recryptd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'] = [emitter1, emitter2];
+      recryptd.subscriptions.address['1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo'] = [emitter1, emitter2];
+      recryptd.subscriptions.address['mgY65WSfEmsyYaYPQaXhmXMeBhwp4EcsQW'] = [emitter2];
+      recryptd.subscriptions.address['3CMNFxN1oHBc4R1EpboAL5yzHGgE611Xou'] = [emitter1];
+      recryptd.unsubscribeAddress(emitter1);
+      recryptd.subscriptions.address['2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br'].length.should.equal(1);
+      recryptd.subscriptions.address['1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo'].length.should.equal(1);
+      recryptd.subscriptions.address['mgY65WSfEmsyYaYPQaXhmXMeBhwp4EcsQW'].length.should.equal(1);
+      should.not.exist(recryptd.subscriptions.address['3CMNFxN1oHBc4R1EpboAL5yzHGgE611Xou']);
     });
   });
 
   describe('#_getDefaultConfig', function() {
     it('will generate config file from defaults', function() {
-      var qtumd = new BitcoinService(baseConfig);
-      var config = qtumd._getDefaultConfig();
+      var recryptd = new BitcoinService(baseConfig);
+      var config = recryptd._getDefaultConfig();
       config.should.equal(defaultBitcoinConf);
     });
   });
@@ -358,7 +358,7 @@ describe('Bitcoin Service', function() {
       sandbox.restore();
     });
     it('will parse a bitcoin.conf file', function() {
-      var TestBitcoin = proxyquire('../../lib/services/qtumd', {
+      var TestBitcoin = proxyquire('../../lib/services/recryptd', {
         fs: {
           readFileSync: readFileSync,
           existsSync: sinon.stub().returns(true),
@@ -368,12 +368,12 @@ describe('Bitcoin Service', function() {
           sync: sinon.stub()
         }
       });
-      var qtumd = new TestBitcoin(baseConfig);
-      qtumd.options.spawn.datadir = '/tmp/.bitcoin';
+      var recryptd = new TestBitcoin(baseConfig);
+      recryptd.options.spawn.datadir = '/tmp/.bitcoin';
       var node = {};
-      qtumd._loadSpawnConfiguration(node);
-      should.exist(qtumd.spawn.config);
-      qtumd.spawn.config.should.deep.equal({
+      recryptd._loadSpawnConfiguration(node);
+      should.exist(recryptd.spawn.config);
+      recryptd.spawn.config.should.deep.equal({
         addressindex: 1,
         checkblocks: 144,
         dbcache: 8192,
@@ -394,7 +394,7 @@ describe('Bitcoin Service', function() {
       });
     });
     it('will expand relative datadir to absolute path', function() {
-      var TestBitcoin = proxyquire('../../lib/services/qtumd', {
+      var TestBitcoin = proxyquire('../../lib/services/recryptd', {
         fs: {
           readFileSync: readFileSync,
           existsSync: sinon.stub().returns(true),
@@ -414,14 +414,14 @@ describe('Bitcoin Service', function() {
           exec: 'testpath'
         }
       };
-      var qtumd = new TestBitcoin(config);
-      qtumd.options.spawn.datadir = './data';
+      var recryptd = new TestBitcoin(config);
+      recryptd.options.spawn.datadir = './data';
       var node = {};
-      qtumd._loadSpawnConfiguration(node);
-      qtumd.options.spawn.datadir.should.equal('/tmp/.bitcore/data');
+      recryptd._loadSpawnConfiguration(node);
+      recryptd.options.spawn.datadir.should.equal('/tmp/.bitcore/data');
     });
     it('should throw an exception if txindex isn\'t enabled in the configuration', function() {
-      var TestBitcoin = proxyquire('../../lib/services/qtumd', {
+      var TestBitcoin = proxyquire('../../lib/services/recryptd', {
         fs: {
           readFileSync: sinon.stub().returns(fs.readFileSync(__dirname + '/../data/badbitcoin.conf')),
           existsSync: sinon.stub().returns(true),
@@ -430,16 +430,16 @@ describe('Bitcoin Service', function() {
           sync: sinon.stub()
         }
       });
-      var qtumd = new TestBitcoin(baseConfig);
+      var recryptd = new TestBitcoin(baseConfig);
       (function() {
-        qtumd._loadSpawnConfiguration({datadir: './test'});
+        recryptd._loadSpawnConfiguration({datadir: './test'});
       }).should.throw(bitcore.errors.InvalidState);
     });
     it('should NOT set https options if node https options are set', function() {
       var writeFileSync = function(path, config) {
         config.should.equal(defaultBitcoinConf);
       };
-      var TestBitcoin = proxyquire('../../lib/services/qtumd', {
+      var TestBitcoin = proxyquire('../../lib/services/recryptd', {
         fs: {
           writeFileSync: writeFileSync,
           readFileSync: readFileSync,
@@ -465,10 +465,10 @@ describe('Bitcoin Service', function() {
           exec: 'testexec'
         }
       };
-      var qtumd = new TestBitcoin(config);
-      qtumd.options.spawn.datadir = '/tmp/.bitcoin';
+      var recryptd = new TestBitcoin(config);
+      recryptd.options.spawn.datadir = '/tmp/.bitcoin';
       var node = {};
-      qtumd._loadSpawnConfiguration(node);
+      recryptd._loadSpawnConfiguration(node);
     });
   });
 
@@ -481,7 +481,7 @@ describe('Bitcoin Service', function() {
       sandbox.restore();
     });
     it('should warn the user if reindex is set to 1 in the bitcoin.conf file', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var config = {
         txindex: 1,
         addressindex: 1,
@@ -492,12 +492,12 @@ describe('Bitcoin Service', function() {
         reindex: 1
       };
       var node = {};
-      qtumd._checkConfigIndexes(config, node);
+      recryptd._checkConfigIndexes(config, node);
       log.warn.callCount.should.equal(1);
       node._reindex.should.equal(true);
     });
     it('should warn if zmq port and hosts do not match', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var config = {
         txindex: 1,
         addressindex: 1,
@@ -509,113 +509,113 @@ describe('Bitcoin Service', function() {
       };
       var node = {};
       (function() {
-        qtumd._checkConfigIndexes(config, node);
+        recryptd._checkConfigIndexes(config, node);
       }).should.throw('"zmqpubrawtx" and "zmqpubhashblock"');
     });
   });
 
   describe('#_resetCaches', function() {
     it('will reset LRU caches', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var keys = [];
       for (var i = 0; i < 10; i++) {
         keys.push(crypto.randomBytes(32));
-        qtumd.transactionDetailedCache.set(keys[i], {});
-        qtumd.utxosCache.set(keys[i], {});
-        qtumd.txidsCache.set(keys[i], {});
-        qtumd.balanceCache.set(keys[i], {});
-        qtumd.summaryCache.set(keys[i], {});
+        recryptd.transactionDetailedCache.set(keys[i], {});
+        recryptd.utxosCache.set(keys[i], {});
+        recryptd.txidsCache.set(keys[i], {});
+        recryptd.balanceCache.set(keys[i], {});
+        recryptd.summaryCache.set(keys[i], {});
       }
-      qtumd._resetCaches();
-      should.equal(qtumd.transactionDetailedCache.get(keys[0]), undefined);
-      should.equal(qtumd.utxosCache.get(keys[0]), undefined);
-      should.equal(qtumd.txidsCache.get(keys[0]), undefined);
-      should.equal(qtumd.balanceCache.get(keys[0]), undefined);
-      should.equal(qtumd.summaryCache.get(keys[0]), undefined);
+      recryptd._resetCaches();
+      should.equal(recryptd.transactionDetailedCache.get(keys[0]), undefined);
+      should.equal(recryptd.utxosCache.get(keys[0]), undefined);
+      should.equal(recryptd.txidsCache.get(keys[0]), undefined);
+      should.equal(recryptd.balanceCache.get(keys[0]), undefined);
+      should.equal(recryptd.summaryCache.get(keys[0]), undefined);
     });
   });
 
   describe('#_tryAllClients', function() {
     it('will retry for each node client', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.tryAllInterval = 1;
-      qtumd.nodes.push({
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.tryAllInterval = 1;
+      recryptd.nodes.push({
         client: {
           getInfo: sinon.stub().callsArgWith(0, new Error('test'))
         }
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getInfo: sinon.stub().callsArgWith(0, new Error('test'))
         }
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getInfo: sinon.stub().callsArg(0)
         }
       });
-      qtumd._tryAllClients(function(client, next) {
+      recryptd._tryAllClients(function(client, next) {
         client.getInfo(next);
       }, function(err) {
         if (err) {
           return done(err);
         }
-        qtumd.nodes[0].client.getInfo.callCount.should.equal(1);
-        qtumd.nodes[1].client.getInfo.callCount.should.equal(1);
-        qtumd.nodes[2].client.getInfo.callCount.should.equal(1);
+        recryptd.nodes[0].client.getInfo.callCount.should.equal(1);
+        recryptd.nodes[1].client.getInfo.callCount.should.equal(1);
+        recryptd.nodes[2].client.getInfo.callCount.should.equal(1);
         done();
       });
     });
     it('will start using the current node index (round-robin)', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.tryAllInterval = 1;
-      qtumd.nodes.push({
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.tryAllInterval = 1;
+      recryptd.nodes.push({
         client: {
           getInfo: sinon.stub().callsArgWith(0, new Error('2'))
         }
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getInfo: sinon.stub().callsArgWith(0, new Error('3'))
         }
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getInfo: sinon.stub().callsArgWith(0, new Error('1'))
         }
       });
-      qtumd.nodesIndex = 2;
-      qtumd._tryAllClients(function(client, next) {
+      recryptd.nodesIndex = 2;
+      recryptd._tryAllClients(function(client, next) {
         client.getInfo(next);
       }, function(err) {
         err.should.be.instanceOf(Error);
         err.message.should.equal('3');
-        qtumd.nodes[0].client.getInfo.callCount.should.equal(1);
-        qtumd.nodes[1].client.getInfo.callCount.should.equal(1);
-        qtumd.nodes[2].client.getInfo.callCount.should.equal(1);
-        qtumd.nodesIndex.should.equal(2);
+        recryptd.nodes[0].client.getInfo.callCount.should.equal(1);
+        recryptd.nodes[1].client.getInfo.callCount.should.equal(1);
+        recryptd.nodes[2].client.getInfo.callCount.should.equal(1);
+        recryptd.nodesIndex.should.equal(2);
         done();
       });
     });
     it('will get error if all clients fail', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.tryAllInterval = 1;
-      qtumd.nodes.push({
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.tryAllInterval = 1;
+      recryptd.nodes.push({
         client: {
           getInfo: sinon.stub().callsArgWith(0, new Error('test'))
         }
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getInfo: sinon.stub().callsArgWith(0, new Error('test'))
         }
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getInfo: sinon.stub().callsArgWith(0, new Error('test'))
         }
       });
-      qtumd._tryAllClients(function(client, next) {
+      recryptd._tryAllClients(function(client, next) {
         client.getInfo(next);
       }, function(err) {
         should.exist(err);
@@ -627,9 +627,9 @@ describe('Bitcoin Service', function() {
   });
 
   describe('#_wrapRPCError', function() {
-    it('will convert qtumd-rpc error object into JavaScript error', function() {
-      var qtumd = new BitcoinService(baseConfig);
-      var error = qtumd._wrapRPCError({message: 'Test error', code: -1});
+    it('will convert recryptd-rpc error object into JavaScript error', function() {
+      var recryptd = new BitcoinService(baseConfig);
+      var error = recryptd._wrapRPCError({message: 'Test error', code: -1});
       error.should.be.an.instanceof(errors.RPCError);
       error.code.should.equal(-1);
       error.message.should.equal('Test error');
@@ -645,10 +645,10 @@ describe('Bitcoin Service', function() {
       sandbox.restore();
     });
     it('will set height and genesis buffer', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var genesisBuffer = new Buffer([]);
-      qtumd.getRawBlock = sinon.stub().callsArgWith(1, null, genesisBuffer);
-      qtumd.nodes.push({
+      recryptd.getRawBlock = sinon.stub().callsArgWith(1, null, genesisBuffer);
+      recryptd.nodes.push({
         client: {
           getBestBlockHash: function(callback) {
             callback(null, {
@@ -671,45 +671,45 @@ describe('Bitcoin Service', function() {
           }
         }
       });
-      qtumd._initChain(function() {
+      recryptd._initChain(function() {
         log.info.callCount.should.equal(1);
-        qtumd.getRawBlock.callCount.should.equal(1);
-        qtumd.getRawBlock.args[0][0].should.equal('genesishash');
-        qtumd.height.should.equal(5000);
-        qtumd.genesisBuffer.should.equal(genesisBuffer);
+        recryptd.getRawBlock.callCount.should.equal(1);
+        recryptd.getRawBlock.args[0][0].should.equal('genesishash');
+        recryptd.height.should.equal(5000);
+        recryptd.genesisBuffer.should.equal(genesisBuffer);
         done();
       });
     });
     it('it will handle error from getBestBlockHash', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBestBlockHash = sinon.stub().callsArgWith(0, {code: -1, message: 'error'});
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBestBlockHash: getBestBlockHash
         }
       });
-      qtumd._initChain(function(err) {
+      recryptd._initChain(function(err) {
         err.should.be.instanceOf(Error);
         done();
       });
     });
     it('it will handle error from getBlock', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBestBlockHash = sinon.stub().callsArgWith(0, null, {});
       var getBlock = sinon.stub().callsArgWith(1, {code: -1, message: 'error'});
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBestBlockHash: getBestBlockHash,
           getBlock: getBlock
         }
       });
-      qtumd._initChain(function(err) {
+      recryptd._initChain(function(err) {
         err.should.be.instanceOf(Error);
         done();
       });
     });
     it('it will handle error from getBlockHash', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBestBlockHash = sinon.stub().callsArgWith(0, null, {});
       var getBlock = sinon.stub().callsArgWith(1, null, {
         result: {
@@ -717,20 +717,20 @@ describe('Bitcoin Service', function() {
         }
       });
       var getBlockHash = sinon.stub().callsArgWith(1, {code: -1, message: 'error'});
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBestBlockHash: getBestBlockHash,
           getBlock: getBlock,
           getBlockHash: getBlockHash
         }
       });
-      qtumd._initChain(function(err) {
+      recryptd._initChain(function(err) {
         err.should.be.instanceOf(Error);
         done();
       });
     });
     it('it will handle error from getRawBlock', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBestBlockHash = sinon.stub().callsArgWith(0, null, {});
       var getBlock = sinon.stub().callsArgWith(1, null, {
         result: {
@@ -738,15 +738,15 @@ describe('Bitcoin Service', function() {
         }
       });
       var getBlockHash = sinon.stub().callsArgWith(1, null, {});
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBestBlockHash: getBestBlockHash,
           getBlock: getBlock,
           getBlockHash: getBlockHash
         }
       });
-      qtumd.getRawBlock = sinon.stub().callsArgWith(1, new Error('test'));
-      qtumd._initChain(function(err) {
+      recryptd.getRawBlock = sinon.stub().callsArgWith(1, new Error('test'));
+      recryptd._initChain(function(err) {
         err.should.be.instanceOf(Error);
         done();
       });
@@ -768,8 +768,8 @@ describe('Bitcoin Service', function() {
           exec: 'testpath'
         }
       };
-      var qtumd = new BitcoinService(config);
-      qtumd._getDefaultConf().rpcport.should.equal(8332);
+      var recryptd = new BitcoinService(config);
+      recryptd._getDefaultConf().rpcport.should.equal(8332);
     });
     it('will get default rpc port for testnet', function() {
       var config = {
@@ -781,8 +781,8 @@ describe('Bitcoin Service', function() {
           exec: 'testpath'
         }
       };
-      var qtumd = new BitcoinService(config);
-      qtumd._getDefaultConf().rpcport.should.equal(18332);
+      var recryptd = new BitcoinService(config);
+      recryptd._getDefaultConf().rpcport.should.equal(18332);
     });
     it('will get default rpc port for regtest', function() {
       bitcore.Networks.enableRegtest();
@@ -795,8 +795,8 @@ describe('Bitcoin Service', function() {
           exec: 'testpath'
         }
       };
-      var qtumd = new BitcoinService(config);
-      qtumd._getDefaultConf().rpcport.should.equal(18332);
+      var recryptd = new BitcoinService(config);
+      recryptd._getDefaultConf().rpcport.should.equal(18332);
     });
   });
 
@@ -815,8 +815,8 @@ describe('Bitcoin Service', function() {
           exec: 'testpath'
         }
       };
-      var qtumd = new BitcoinService(config);
-      should.equal(qtumd._getNetworkConfigPath(), undefined);
+      var recryptd = new BitcoinService(config);
+      should.equal(recryptd._getNetworkConfigPath(), undefined);
     });
     it('will get default rpc port for testnet', function() {
       var config = {
@@ -828,8 +828,8 @@ describe('Bitcoin Service', function() {
           exec: 'testpath'
         }
       };
-      var qtumd = new BitcoinService(config);
-      qtumd._getNetworkConfigPath().should.equal('testnet3/bitcoin.conf');
+      var recryptd = new BitcoinService(config);
+      recryptd._getNetworkConfigPath().should.equal('testnet3/bitcoin.conf');
     });
     it('will get default rpc port for regtest', function() {
       bitcore.Networks.enableRegtest();
@@ -842,8 +842,8 @@ describe('Bitcoin Service', function() {
           exec: 'testpath'
         }
       };
-      var qtumd = new BitcoinService(config);
-      qtumd._getNetworkConfigPath().should.equal('regtest/bitcoin.conf');
+      var recryptd = new BitcoinService(config);
+      recryptd._getNetworkConfigPath().should.equal('regtest/bitcoin.conf');
     });
   });
 
@@ -853,78 +853,78 @@ describe('Bitcoin Service', function() {
       baseConfig.node.network = bitcore.Networks.testnet;
     });
     it('return --testnet for testnet', function() {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.node.network = bitcore.Networks.testnet;
-      qtumd._getNetworkOption().should.equal('--testnet');
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.node.network = bitcore.Networks.testnet;
+      recryptd._getNetworkOption().should.equal('--testnet');
     });
     it('return --regtest for testnet', function() {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.node.network = bitcore.Networks.testnet;
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.node.network = bitcore.Networks.testnet;
       bitcore.Networks.enableRegtest();
-      qtumd._getNetworkOption().should.equal('--regtest');
+      recryptd._getNetworkOption().should.equal('--regtest');
     });
     it('return undefined for livenet', function() {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.node.network = bitcore.Networks.livenet;
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.node.network = bitcore.Networks.livenet;
       bitcore.Networks.enableRegtest();
-      should.equal(qtumd._getNetworkOption(), undefined);
+      should.equal(recryptd._getNetworkOption(), undefined);
     });
   });
 
   describe('#_zmqBlockHandler', function() {
     it('will emit block', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var node = {};
       var message = new Buffer('00000000002e08fc7ae9a9aa5380e95e2adcdc5752a4a66a7d3a22466bd4e6aa', 'hex');
-      qtumd._rapidProtectedUpdateTip = sinon.stub();
-      qtumd.on('block', function(block) {
+      recryptd._rapidProtectedUpdateTip = sinon.stub();
+      recryptd.on('block', function(block) {
         block.should.equal(message);
         done();
       });
-      qtumd._zmqBlockHandler(node, message);
+      recryptd._zmqBlockHandler(node, message);
     });
     it('will not emit same block twice', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var node = {};
       var message = new Buffer('00000000002e08fc7ae9a9aa5380e95e2adcdc5752a4a66a7d3a22466bd4e6aa', 'hex');
-      qtumd._rapidProtectedUpdateTip = sinon.stub();
-      qtumd.on('block', function(block) {
+      recryptd._rapidProtectedUpdateTip = sinon.stub();
+      recryptd.on('block', function(block) {
         block.should.equal(message);
         done();
       });
-      qtumd._zmqBlockHandler(node, message);
-      qtumd._zmqBlockHandler(node, message);
+      recryptd._zmqBlockHandler(node, message);
+      recryptd._zmqBlockHandler(node, message);
     });
     it('will call function to update tip', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var node = {};
       var message = new Buffer('00000000002e08fc7ae9a9aa5380e95e2adcdc5752a4a66a7d3a22466bd4e6aa', 'hex');
-      qtumd._rapidProtectedUpdateTip = sinon.stub();
-      qtumd._zmqBlockHandler(node, message);
-      qtumd._rapidProtectedUpdateTip.callCount.should.equal(1);
-      qtumd._rapidProtectedUpdateTip.args[0][0].should.equal(node);
-      qtumd._rapidProtectedUpdateTip.args[0][1].should.equal(message);
+      recryptd._rapidProtectedUpdateTip = sinon.stub();
+      recryptd._zmqBlockHandler(node, message);
+      recryptd._rapidProtectedUpdateTip.callCount.should.equal(1);
+      recryptd._rapidProtectedUpdateTip.args[0][0].should.equal(node);
+      recryptd._rapidProtectedUpdateTip.args[0][1].should.equal(message);
     });
     it('will emit to subscribers', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var node = {};
       var message = new Buffer('00000000002e08fc7ae9a9aa5380e95e2adcdc5752a4a66a7d3a22466bd4e6aa', 'hex');
-      qtumd._rapidProtectedUpdateTip = sinon.stub();
+      recryptd._rapidProtectedUpdateTip = sinon.stub();
       var emitter = new EventEmitter();
-      qtumd.subscriptions.hashblock.push(emitter);
-      emitter.on('qtumd/hashblock', function(blockHash) {
+      recryptd.subscriptions.hashblock.push(emitter);
+      emitter.on('recryptd/hashblock', function(blockHash) {
         blockHash.should.equal(message.toString('hex'));
         done();
       });
-      qtumd._zmqBlockHandler(node, message);
+      recryptd._zmqBlockHandler(node, message);
     });
   });
 
   describe('#_rapidProtectedUpdateTip', function() {
     it('will limit tip updates with rapid calls', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var callCount = 0;
-      qtumd._updateTip = function() {
+      recryptd._updateTip = function() {
         callCount++;
         callCount.should.be.within(1, 2);
         if (callCount > 1) {
@@ -935,7 +935,7 @@ describe('Bitcoin Service', function() {
       var message = new Buffer('00000000002e08fc7ae9a9aa5380e95e2adcdc5752a4a66a7d3a22466bd4e6aa', 'hex');
       var count = 0;
       function repeat() {
-        qtumd._rapidProtectedUpdateTip(node, message);
+        recryptd._rapidProtectedUpdateTip(node, message);
         count++;
         if (count < 50) {
           repeat();
@@ -956,9 +956,9 @@ describe('Bitcoin Service', function() {
       sandbox.restore();
     });
     it('log and emit rpc error from get block', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.syncPercentage = sinon.stub();
-      qtumd.on('error', function(err) {
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.syncPercentage = sinon.stub();
+      recryptd.on('error', function(err) {
         err.code.should.equal(-1);
         err.message.should.equal('Test error');
         log.error.callCount.should.equal(1);
@@ -969,12 +969,12 @@ describe('Bitcoin Service', function() {
           getBlock: sinon.stub().callsArgWith(1, {message: 'Test error', code: -1})
         }
       };
-      qtumd._updateTip(node, message);
+      recryptd._updateTip(node, message);
     });
     it('emit synced if percentage is 100', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.syncPercentage = sinon.stub().callsArgWith(0, null, 100);
-      qtumd.on('synced', function() {
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.syncPercentage = sinon.stub().callsArgWith(0, null, 100);
+      recryptd.on('synced', function() {
         done();
       });
       var node = {
@@ -982,12 +982,12 @@ describe('Bitcoin Service', function() {
           getBlock: sinon.stub()
         }
       };
-      qtumd._updateTip(node, message);
+      recryptd._updateTip(node, message);
     });
     it('NOT emit synced if percentage is less than 100', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.syncPercentage = sinon.stub().callsArgWith(0, null, 99);
-      qtumd.on('synced', function() {
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.syncPercentage = sinon.stub().callsArgWith(0, null, 99);
+      recryptd.on('synced', function() {
         throw new Error('Synced called');
       });
       var node = {
@@ -995,14 +995,14 @@ describe('Bitcoin Service', function() {
           getBlock: sinon.stub()
         }
       };
-      qtumd._updateTip(node, message);
+      recryptd._updateTip(node, message);
       log.info.callCount.should.equal(1);
       done();
     });
     it('log and emit error from syncPercentage', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.syncPercentage = sinon.stub().callsArgWith(0, new Error('test'));
-      qtumd.on('error', function(err) {
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.syncPercentage = sinon.stub().callsArgWith(0, new Error('test'));
+      recryptd.on('error', function(err) {
         log.error.callCount.should.equal(1);
         err.message.should.equal('test');
         done();
@@ -1012,16 +1012,16 @@ describe('Bitcoin Service', function() {
           getBlock: sinon.stub()
         }
       };
-      qtumd._updateTip(node, message);
+      recryptd._updateTip(node, message);
     });
     it('reset caches and set height', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.syncPercentage = sinon.stub();
-      qtumd._resetCaches = sinon.stub();
-      qtumd.on('tip', function(height) {
-        qtumd._resetCaches.callCount.should.equal(1);
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.syncPercentage = sinon.stub();
+      recryptd._resetCaches = sinon.stub();
+      recryptd.on('tip', function(height) {
+        recryptd._resetCaches.callCount.should.equal(1);
         height.should.equal(10);
-        qtumd.height.should.equal(10);
+        recryptd.height.should.equal(10);
         done();
       });
       var node = {
@@ -1033,13 +1033,13 @@ describe('Bitcoin Service', function() {
           })
         }
       };
-      qtumd._updateTip(node, message);
+      recryptd._updateTip(node, message);
     });
     it('will NOT update twice for the same hash', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.syncPercentage = sinon.stub();
-      qtumd._resetCaches = sinon.stub();
-      qtumd.on('tip', function() {
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.syncPercentage = sinon.stub();
+      recryptd._resetCaches = sinon.stub();
+      recryptd.on('tip', function() {
         done();
       });
       var node = {
@@ -1051,8 +1051,8 @@ describe('Bitcoin Service', function() {
           })
         }
       };
-      qtumd._updateTip(node, message);
-      qtumd._updateTip(node, message);
+      recryptd._updateTip(node, message);
+      recryptd._updateTip(node, message);
     });
     it('will not call syncPercentage if node is stopping', function(done) {
       var config = {
@@ -1064,10 +1064,10 @@ describe('Bitcoin Service', function() {
           exec: 'testpath'
         }
       };
-      var qtumd = new BitcoinService(config);
-      qtumd.syncPercentage = sinon.stub();
-      qtumd._resetCaches = sinon.stub();
-      qtumd.node.stopping = true;
+      var recryptd = new BitcoinService(config);
+      recryptd.syncPercentage = sinon.stub();
+      recryptd._resetCaches = sinon.stub();
+      recryptd.node.stopping = true;
       var node = {
         client: {
           getBlock: sinon.stub().callsArgWith(1, null, {
@@ -1077,17 +1077,17 @@ describe('Bitcoin Service', function() {
           })
         }
       };
-      qtumd.on('tip', function() {
-        qtumd.syncPercentage.callCount.should.equal(0);
+      recryptd.on('tip', function() {
+        recryptd.syncPercentage.callCount.should.equal(0);
         done();
       });
-      qtumd._updateTip(node, message);
+      recryptd._updateTip(node, message);
     });
   });
 
   describe('#_getAddressesFromTransaction', function() {
     it('will get results using bitcore.Transaction', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var wif = 'L2Gkw3kKJ6N24QcDuH4XDqt9cTqsKTVNDGz1CRZhk9cq4auDUbJy';
       var privkey = bitcore.PrivateKey.fromWIF(wif);
       var inputAddress = privkey.toAddress(bitcore.Networks.testnet);
@@ -1102,13 +1102,13 @@ describe('Bitcoin Service', function() {
       });
       tx.to(outputAddress, 5000000000);
       tx.sign(privkey);
-      var addresses = qtumd._getAddressesFromTransaction(tx);
+      var addresses = recryptd._getAddressesFromTransaction(tx);
       addresses.length.should.equal(2);
       addresses[0].should.equal(inputAddress.toString());
       addresses[1].should.equal(outputAddress.toString());
     });
     it('will handle non-standard script types', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var tx = bitcore.Transaction();
       tx.addInput(bitcore.Transaction.Input({
         prevTxId: '4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b',
@@ -1123,21 +1123,21 @@ describe('Bitcoin Service', function() {
         script: bitcore.Script('OP_TRUE'),
         satoshis: 5000000000
       }));
-      var addresses = qtumd._getAddressesFromTransaction(tx);
+      var addresses = recryptd._getAddressesFromTransaction(tx);
       addresses.length.should.equal(0);
     });
     it('will handle unparsable script types or missing input script', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var tx = bitcore.Transaction();
       tx.addOutput(bitcore.Transaction.Output({
         script: new Buffer('4c', 'hex'),
         satoshis: 5000000000
       }));
-      var addresses = qtumd._getAddressesFromTransaction(tx);
+      var addresses = recryptd._getAddressesFromTransaction(tx);
       addresses.length.should.equal(0);
     });
     it('will return unique values', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var tx = bitcore.Transaction();
       var address = bitcore.Address('2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br');
       tx.addOutput(bitcore.Transaction.Output({
@@ -1148,88 +1148,88 @@ describe('Bitcoin Service', function() {
         script: bitcore.Script(address),
         satoshis: 5000000000
       }));
-      var addresses = qtumd._getAddressesFromTransaction(tx);
+      var addresses = recryptd._getAddressesFromTransaction(tx);
       addresses.length.should.equal(1);
     });
   });
 
   describe('#_notifyAddressTxidSubscribers', function() {
     it('will emit event if matching addresses', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var address = '1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo';
-      qtumd._getAddressesFromTransaction = sinon.stub().returns([address]);
+      recryptd._getAddressesFromTransaction = sinon.stub().returns([address]);
       var emitter = new EventEmitter();
-      qtumd.subscriptions.address[address] = [emitter];
+      recryptd.subscriptions.address[address] = [emitter];
       var txid = '46f24e0c274fc07708b781963576c4c5d5625d926dbb0a17fa865dcd9fe58ea0';
       var transaction = {};
-      emitter.on('qtumd/addresstxid', function(data) {
+      emitter.on('recryptd/addresstxid', function(data) {
         data.address.should.equal(address);
         data.txid.should.equal(txid);
         done();
       });
       sinon.spy(emitter, 'emit');
-      qtumd._notifyAddressTxidSubscribers(txid, transaction);
+      recryptd._notifyAddressTxidSubscribers(txid, transaction);
       emitter.emit.callCount.should.equal(1);
     });
     it('will NOT emit event without matching addresses', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var address = '1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo';
-      qtumd._getAddressesFromTransaction = sinon.stub().returns([address]);
+      recryptd._getAddressesFromTransaction = sinon.stub().returns([address]);
       var emitter = new EventEmitter();
       var txid = '46f24e0c274fc07708b781963576c4c5d5625d926dbb0a17fa865dcd9fe58ea0';
       var transaction = {};
       emitter.emit = sinon.stub();
-      qtumd._notifyAddressTxidSubscribers(txid, transaction);
+      recryptd._notifyAddressTxidSubscribers(txid, transaction);
       emitter.emit.callCount.should.equal(0);
     });
   });
 
   describe('#_zmqTransactionHandler', function() {
     it('will emit to subscribers', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var expectedBuffer = new Buffer(txhex, 'hex');
       var emitter = new EventEmitter();
-      qtumd.subscriptions.rawtransaction.push(emitter);
-      emitter.on('qtumd/rawtransaction', function(hex) {
+      recryptd.subscriptions.rawtransaction.push(emitter);
+      emitter.on('recryptd/rawtransaction', function(hex) {
         hex.should.be.a('string');
         hex.should.equal(expectedBuffer.toString('hex'));
         done();
       });
       var node = {};
-      qtumd._zmqTransactionHandler(node, expectedBuffer);
+      recryptd._zmqTransactionHandler(node, expectedBuffer);
     });
     it('will NOT emit to subscribers more than once for the same tx', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var expectedBuffer = new Buffer(txhex, 'hex');
       var emitter = new EventEmitter();
-      qtumd.subscriptions.rawtransaction.push(emitter);
-      emitter.on('qtumd/rawtransaction', function() {
+      recryptd.subscriptions.rawtransaction.push(emitter);
+      emitter.on('recryptd/rawtransaction', function() {
         done();
       });
       var node = {};
-      qtumd._zmqTransactionHandler(node, expectedBuffer);
-      qtumd._zmqTransactionHandler(node, expectedBuffer);
+      recryptd._zmqTransactionHandler(node, expectedBuffer);
+      recryptd._zmqTransactionHandler(node, expectedBuffer);
     });
     it('will emit "tx" event', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var expectedBuffer = new Buffer(txhex, 'hex');
-      qtumd.on('tx', function(buffer) {
+      recryptd.on('tx', function(buffer) {
         buffer.should.be.instanceof(Buffer);
         buffer.toString('hex').should.equal(expectedBuffer.toString('hex'));
         done();
       });
       var node = {};
-      qtumd._zmqTransactionHandler(node, expectedBuffer);
+      recryptd._zmqTransactionHandler(node, expectedBuffer);
     });
     it('will NOT emit "tx" event more than once for the same tx', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var expectedBuffer = new Buffer(txhex, 'hex');
-      qtumd.on('tx', function() {
+      recryptd.on('tx', function() {
         done();
       });
       var node = {};
-      qtumd._zmqTransactionHandler(node, expectedBuffer);
-      qtumd._zmqTransactionHandler(node, expectedBuffer);
+      recryptd._zmqTransactionHandler(node, expectedBuffer);
+      recryptd._zmqTransactionHandler(node, expectedBuffer);
     });
   });
 
@@ -1242,11 +1242,11 @@ describe('Bitcoin Service', function() {
       sandbox.restore();
     });
     it('log errors, update tip and subscribe to zmq events', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd._updateTip = sinon.stub();
-      qtumd._subscribeZmqEvents = sinon.stub();
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd._updateTip = sinon.stub();
+      recryptd._subscribeZmqEvents = sinon.stub();
       var blockEvents = 0;
-      qtumd.on('block', function() {
+      recryptd.on('block', function() {
         blockEvents++;
       });
       var getBestBlockHash = sinon.stub().callsArgWith(0, null, {
@@ -1277,12 +1277,12 @@ describe('Bitcoin Service', function() {
           getBlockchainInfo: getBlockchainInfo
         }
       };
-      qtumd._checkSyncedAndSubscribeZmqEvents(node);
+      recryptd._checkSyncedAndSubscribeZmqEvents(node);
       setTimeout(function() {
         log.error.callCount.should.equal(2);
         blockEvents.should.equal(11);
-        qtumd._updateTip.callCount.should.equal(11);
-        qtumd._subscribeZmqEvents.callCount.should.equal(1);
+        recryptd._updateTip.callCount.should.equal(11);
+        recryptd._subscribeZmqEvents.callCount.should.equal(1);
         done();
       }, 200);
     });
@@ -1296,7 +1296,7 @@ describe('Bitcoin Service', function() {
           exec: 'testpath'
         }
       };
-      var qtumd = new BitcoinService(config);
+      var recryptd = new BitcoinService(config);
       var getBestBlockHash = sinon.stub().callsArgWith(0, {code: -1, message: 'error'});
       var node = {
         _tipUpdateInterval: 1,
@@ -1304,9 +1304,9 @@ describe('Bitcoin Service', function() {
           getBestBlockHash: getBestBlockHash
         }
       };
-      qtumd._checkSyncedAndSubscribeZmqEvents(node);
+      recryptd._checkSyncedAndSubscribeZmqEvents(node);
       setTimeout(function() {
-        qtumd.node.stopping = true;
+        recryptd.node.stopping = true;
         var count = getBestBlockHash.callCount;
         setTimeout(function() {
           getBestBlockHash.callCount.should.equal(count);
@@ -1315,9 +1315,9 @@ describe('Bitcoin Service', function() {
       }, 100);
     });
     it('will not set interval if synced is true', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd._updateTip = sinon.stub();
-      qtumd._subscribeZmqEvents = sinon.stub();
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd._updateTip = sinon.stub();
+      recryptd._subscribeZmqEvents = sinon.stub();
       var getBestBlockHash = sinon.stub().callsArgWith(0, null, {
         result: '00000000000000001bb82a7f5973618cfd3185ba1ded04dd852a653f92a27c45'
       });
@@ -1334,7 +1334,7 @@ describe('Bitcoin Service', function() {
           getBlockchainInfo: getBlockchainInfo
         }
       };
-      qtumd._checkSyncedAndSubscribeZmqEvents(node);
+      recryptd._checkSyncedAndSubscribeZmqEvents(node);
       setTimeout(function() {
         getBestBlockHash.callCount.should.equal(1);
         getBlockchainInfo.callCount.should.equal(1);
@@ -1345,28 +1345,28 @@ describe('Bitcoin Service', function() {
 
   describe('#_subscribeZmqEvents', function() {
     it('will call subscribe on zmq socket', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var node = {
         zmqSubSocket: {
           subscribe: sinon.stub(),
           on: sinon.stub()
         }
       };
-      qtumd._subscribeZmqEvents(node);
+      recryptd._subscribeZmqEvents(node);
       node.zmqSubSocket.subscribe.callCount.should.equal(2);
       node.zmqSubSocket.subscribe.args[0][0].should.equal('hashblock');
       node.zmqSubSocket.subscribe.args[1][0].should.equal('rawtx');
     });
     it('will call relevant handler for rawtx topics', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd._zmqTransactionHandler = sinon.stub();
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd._zmqTransactionHandler = sinon.stub();
       var node = {
         zmqSubSocket: new EventEmitter()
       };
       node.zmqSubSocket.subscribe = sinon.stub();
-      qtumd._subscribeZmqEvents(node);
+      recryptd._subscribeZmqEvents(node);
       node.zmqSubSocket.on('message', function() {
-        qtumd._zmqTransactionHandler.callCount.should.equal(1);
+        recryptd._zmqTransactionHandler.callCount.should.equal(1);
         done();
       });
       var topic = new Buffer('rawtx', 'utf8');
@@ -1374,15 +1374,15 @@ describe('Bitcoin Service', function() {
       node.zmqSubSocket.emit('message', topic, message);
     });
     it('will call relevant handler for hashblock topics', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd._zmqBlockHandler = sinon.stub();
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd._zmqBlockHandler = sinon.stub();
       var node = {
         zmqSubSocket: new EventEmitter()
       };
       node.zmqSubSocket.subscribe = sinon.stub();
-      qtumd._subscribeZmqEvents(node);
+      recryptd._subscribeZmqEvents(node);
       node.zmqSubSocket.on('message', function() {
-        qtumd._zmqBlockHandler.callCount.should.equal(1);
+        recryptd._zmqBlockHandler.callCount.should.equal(1);
         done();
       });
       var topic = new Buffer('hashblock', 'utf8');
@@ -1390,17 +1390,17 @@ describe('Bitcoin Service', function() {
       node.zmqSubSocket.emit('message', topic, message);
     });
     it('will ignore unknown topic types', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd._zmqBlockHandler = sinon.stub();
-      qtumd._zmqTransactionHandler = sinon.stub();
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd._zmqBlockHandler = sinon.stub();
+      recryptd._zmqTransactionHandler = sinon.stub();
       var node = {
         zmqSubSocket: new EventEmitter()
       };
       node.zmqSubSocket.subscribe = sinon.stub();
-      qtumd._subscribeZmqEvents(node);
+      recryptd._subscribeZmqEvents(node);
       node.zmqSubSocket.on('message', function() {
-        qtumd._zmqBlockHandler.callCount.should.equal(0);
-        qtumd._zmqTransactionHandler.callCount.should.equal(0);
+        recryptd._zmqBlockHandler.callCount.should.equal(0);
+        recryptd._zmqTransactionHandler.callCount.should.equal(0);
         done();
       });
       var topic = new Buffer('unknown', 'utf8');
@@ -1417,14 +1417,14 @@ describe('Bitcoin Service', function() {
       var socketFunc = function() {
         return socket;
       };
-      var BitcoinService = proxyquire('../../lib/services/qtumd', {
+      var BitcoinService = proxyquire('../../lib/services/recryptd', {
         zmq: {
           socket: socketFunc
         }
       });
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var node = {};
-      qtumd._initZmqSubSocket(node, 'url');
+      recryptd._initZmqSubSocket(node, 'url');
       node.zmqSubSocket.should.equal(socket);
       socket.connect.callCount.should.equal(1);
       socket.connect.args[0][0].should.equal('url');
@@ -1443,7 +1443,7 @@ describe('Bitcoin Service', function() {
       sandbox.restore();
     });
     it('give error from client getblockchaininfo', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var node = {
         _reindex: true,
         _reindexWait: 1,
@@ -1451,14 +1451,14 @@ describe('Bitcoin Service', function() {
           getBlockchainInfo: sinon.stub().callsArgWith(0, {code: -1 , message: 'Test error'})
         }
       };
-      qtumd._checkReindex(node, function(err) {
+      recryptd._checkReindex(node, function(err) {
         should.exist(err);
         err.should.be.instanceof(errors.RPCError);
         done();
       });
     });
     it('will wait until sync is 100 percent', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var percent = 0.89;
       var node = {
         _reindex: true,
@@ -1474,18 +1474,18 @@ describe('Bitcoin Service', function() {
           }
         }
       };
-      qtumd._checkReindex(node, function() {
+      recryptd._checkReindex(node, function() {
         node._reindex.should.equal(false);
         log.info.callCount.should.equal(11);
         done();
       });
     });
     it('will call callback if reindex is not enabled', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var node = {
         _reindex: false
       };
-      qtumd._checkReindex(node, function() {
+      recryptd._checkReindex(node, function() {
         node._reindex.should.equal(false);
         done();
       });
@@ -1501,21 +1501,21 @@ describe('Bitcoin Service', function() {
       sandbox.restore();
     });
     it('will give rpc from client getbestblockhash', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBestBlockHash = sinon.stub().callsArgWith(0, {code: -1, message: 'Test error'});
       var node = {
         client: {
           getBestBlockHash: getBestBlockHash
         }
       };
-      qtumd._loadTipFromNode(node, function(err) {
+      recryptd._loadTipFromNode(node, function(err) {
         err.should.be.instanceof(Error);
         log.warn.callCount.should.equal(0);
         done();
       });
     });
     it('will give rpc from client getblock', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBestBlockHash = sinon.stub().callsArgWith(0, null, {
         result: '00000000000000001bb82a7f5973618cfd3185ba1ded04dd852a653f92a27c45'
       });
@@ -1526,7 +1526,7 @@ describe('Bitcoin Service', function() {
           getBlock: getBlock
         }
       };
-      qtumd._loadTipFromNode(node, function(err) {
+      recryptd._loadTipFromNode(node, function(err) {
         getBlock.args[0][0].should.equal('00000000000000001bb82a7f5973618cfd3185ba1ded04dd852a653f92a27c45');
         err.should.be.instanceof(Error);
         log.warn.callCount.should.equal(0);
@@ -1534,21 +1534,21 @@ describe('Bitcoin Service', function() {
       });
     });
     it('will log when error is RPC_IN_WARMUP', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBestBlockHash = sinon.stub().callsArgWith(0, {code: -28, message: 'Verifying blocks...'});
       var node = {
         client: {
           getBestBlockHash: getBestBlockHash
         }
       };
-      qtumd._loadTipFromNode(node, function(err) {
+      recryptd._loadTipFromNode(node, function(err) {
         err.should.be.instanceof(Error);
         log.warn.callCount.should.equal(1);
         done();
       });
     });
     it('will set height and emit tip', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBestBlockHash = sinon.stub().callsArgWith(0, null, {
         result: '00000000000000001bb82a7f5973618cfd3185ba1ded04dd852a653f92a27c45'
       });
@@ -1563,12 +1563,12 @@ describe('Bitcoin Service', function() {
           getBlock: getBlock
         }
       };
-      qtumd.on('tip', function(height) {
+      recryptd.on('tip', function(height) {
         height.should.equal(100);
-        qtumd.height.should.equal(100);
+        recryptd.height.should.equal(100);
         done();
       });
-      qtumd._loadTipFromNode(node, function(err) {
+      recryptd._loadTipFromNode(node, function(err) {
         if (err) {
           return done(err);
         }
@@ -1590,20 +1590,20 @@ describe('Bitcoin Service', function() {
       var error = new Error('Test error');
       error.code = 'ENOENT';
       readFile.onCall(1).callsArgWith(2, error);
-      var TestBitcoinService = proxyquire('../../lib/services/qtumd', {
+      var TestBitcoinService = proxyquire('../../lib/services/recryptd', {
         fs: {
           readFile: readFile
         }
       });
-      var qtumd = new TestBitcoinService(baseConfig);
-      qtumd.spawnStopTime = 1;
-      qtumd._process = {};
-      qtumd._process.kill = sinon.stub();
-      qtumd._stopSpawnedBitcoin(function(err) {
+      var recryptd = new TestBitcoinService(baseConfig);
+      recryptd.spawnStopTime = 1;
+      recryptd._process = {};
+      recryptd._process.kill = sinon.stub();
+      recryptd._stopSpawnedBitcoin(function(err) {
         if (err) {
           return done(err);
         }
-        qtumd._process.kill.callCount.should.equal(1);
+        recryptd._process.kill.callCount.should.equal(1);
         log.warn.callCount.should.equal(1);
         done();
       });
@@ -1614,22 +1614,22 @@ describe('Bitcoin Service', function() {
       var error = new Error('Test error');
       error.code = 'ENOENT';
       readFile.onCall(1).callsArgWith(2, error);
-      var TestBitcoinService = proxyquire('../../lib/services/qtumd', {
+      var TestBitcoinService = proxyquire('../../lib/services/recryptd', {
         fs: {
           readFile: readFile
         }
       });
-      var qtumd = new TestBitcoinService(baseConfig);
-      qtumd.spawnStopTime = 1;
-      qtumd._process = {};
+      var recryptd = new TestBitcoinService(baseConfig);
+      recryptd.spawnStopTime = 1;
+      recryptd._process = {};
       var error2 = new Error('Test error');
       error2.code = 'ESRCH';
-      qtumd._process.kill = sinon.stub().throws(error2);
-      qtumd._stopSpawnedBitcoin(function(err) {
+      recryptd._process.kill = sinon.stub().throws(error2);
+      recryptd._stopSpawnedBitcoin(function(err) {
         if (err) {
           return done(err);
         }
-        qtumd._process.kill.callCount.should.equal(1);
+        recryptd._process.kill.callCount.should.equal(1);
         log.warn.callCount.should.equal(2);
         done();
       });
@@ -1637,16 +1637,16 @@ describe('Bitcoin Service', function() {
     it('it will attempt to kill process with NaN', function(done) {
       var readFile = sandbox.stub();
       readFile.onCall(0).callsArgWith(2, null, '     ');
-      var TestBitcoinService = proxyquire('../../lib/services/qtumd', {
+      var TestBitcoinService = proxyquire('../../lib/services/recryptd', {
         fs: {
           readFile: readFile
         }
       });
-      var qtumd = new TestBitcoinService(baseConfig);
-      qtumd.spawnStopTime = 1;
-      qtumd._process = {};
-      qtumd._process.kill = sinon.stub();
-      qtumd._stopSpawnedBitcoin(function(err) {
+      var recryptd = new TestBitcoinService(baseConfig);
+      recryptd.spawnStopTime = 1;
+      recryptd._process = {};
+      recryptd._process.kill = sinon.stub();
+      recryptd._stopSpawnedBitcoin(function(err) {
         if (err) {
           return done(err);
         }
@@ -1656,16 +1656,16 @@ describe('Bitcoin Service', function() {
     it('it will attempt to kill process without pid', function(done) {
       var readFile = sandbox.stub();
       readFile.onCall(0).callsArgWith(2, null, '');
-      var TestBitcoinService = proxyquire('../../lib/services/qtumd', {
+      var TestBitcoinService = proxyquire('../../lib/services/recryptd', {
         fs: {
           readFile: readFile
         }
       });
-      var qtumd = new TestBitcoinService(baseConfig);
-      qtumd.spawnStopTime = 1;
-      qtumd._process = {};
-      qtumd._process.kill = sinon.stub();
-      qtumd._stopSpawnedBitcoin(function(err) {
+      var recryptd = new TestBitcoinService(baseConfig);
+      recryptd.spawnStopTime = 1;
+      recryptd._process = {};
+      recryptd._process.kill = sinon.stub();
+      recryptd._stopSpawnedBitcoin(function(err) {
         if (err) {
           return done(err);
         }
@@ -1685,20 +1685,20 @@ describe('Bitcoin Service', function() {
       sandbox.restore();
     });
     it('will give error from spawn config', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd._loadSpawnConfiguration = sinon.stub();
-      qtumd._loadSpawnConfiguration = sinon.stub().throws(new Error('test'));
-      qtumd._spawnChildProcess(function(err) {
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd._loadSpawnConfiguration = sinon.stub();
+      recryptd._loadSpawnConfiguration = sinon.stub().throws(new Error('test'));
+      recryptd._spawnChildProcess(function(err) {
         err.should.be.instanceof(Error);
         err.message.should.equal('test');
         done();
       });
     });
     it('will give error from stopSpawnedBitcoin', function() {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd._loadSpawnConfiguration = sinon.stub();
-      qtumd._stopSpawnedBitcoin = sinon.stub().callsArgWith(0, new Error('test'));
-      qtumd._spawnChildProcess(function(err) {
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd._loadSpawnConfiguration = sinon.stub();
+      recryptd._stopSpawnedBitcoin = sinon.stub().callsArgWith(0, new Error('test'));
+      recryptd._spawnChildProcess(function(err) {
         err.should.be.instanceOf(Error);
         err.message.should.equal('test');
       });
@@ -1715,7 +1715,7 @@ describe('Bitcoin Service', function() {
       };
       var process = new EventEmitter();
       var spawn = sinon.stub().returns(process);
-      var TestBitcoinService = proxyquire('../../lib/services/qtumd', {
+      var TestBitcoinService = proxyquire('../../lib/services/recryptd', {
         fs: {
           readFileSync: readFileSync
         },
@@ -1723,12 +1723,12 @@ describe('Bitcoin Service', function() {
           spawn: spawn
         }
       });
-      var qtumd = new TestBitcoinService(config);
-      qtumd.spawn = {};
-      qtumd._loadSpawnConfiguration = sinon.stub();
-      qtumd._stopSpawnedBitcoin = sinon.stub().callsArgWith(0, null);
-      qtumd.node.stopping = true;
-      qtumd._spawnChildProcess(function(err) {
+      var recryptd = new TestBitcoinService(config);
+      recryptd.spawn = {};
+      recryptd._loadSpawnConfiguration = sinon.stub();
+      recryptd._stopSpawnedBitcoin = sinon.stub().callsArgWith(0, null);
+      recryptd.node.stopping = true;
+      recryptd._spawnChildProcess(function(err) {
         err.should.be.instanceOf(Error);
         err.message.should.match(/Stopping while trying to spawn/);
       });
@@ -1736,7 +1736,7 @@ describe('Bitcoin Service', function() {
     it('will include network with spawn command and init zmq/rpc on node', function(done) {
       var process = new EventEmitter();
       var spawn = sinon.stub().returns(process);
-      var TestBitcoinService = proxyquire('../../lib/services/qtumd', {
+      var TestBitcoinService = proxyquire('../../lib/services/recryptd', {
         fs: {
           readFileSync: readFileSync
         },
@@ -1744,24 +1744,24 @@ describe('Bitcoin Service', function() {
           spawn: spawn
         }
       });
-      var qtumd = new TestBitcoinService(baseConfig);
+      var recryptd = new TestBitcoinService(baseConfig);
 
-      qtumd._loadSpawnConfiguration = sinon.stub();
-      qtumd.spawn = {};
-      qtumd.spawn.exec = 'testexec';
-      qtumd.spawn.configPath = 'testdir/bitcoin.conf';
-      qtumd.spawn.datadir = 'testdir';
-      qtumd.spawn.config = {};
-      qtumd.spawn.config.rpcport = 20001;
-      qtumd.spawn.config.rpcuser = 'bitcoin';
-      qtumd.spawn.config.rpcpassword = 'password';
-      qtumd.spawn.config.zmqpubrawtx = 'tcp://127.0.0.1:30001';
+      recryptd._loadSpawnConfiguration = sinon.stub();
+      recryptd.spawn = {};
+      recryptd.spawn.exec = 'testexec';
+      recryptd.spawn.configPath = 'testdir/bitcoin.conf';
+      recryptd.spawn.datadir = 'testdir';
+      recryptd.spawn.config = {};
+      recryptd.spawn.config.rpcport = 20001;
+      recryptd.spawn.config.rpcuser = 'bitcoin';
+      recryptd.spawn.config.rpcpassword = 'password';
+      recryptd.spawn.config.zmqpubrawtx = 'tcp://127.0.0.1:30001';
 
-      qtumd._loadTipFromNode = sinon.stub().callsArgWith(1, null);
-      qtumd._initZmqSubSocket = sinon.stub();
-      qtumd._checkSyncedAndSubscribeZmqEvents = sinon.stub();
-      qtumd._checkReindex = sinon.stub().callsArgWith(1, null);
-      qtumd._spawnChildProcess(function(err, node) {
+      recryptd._loadTipFromNode = sinon.stub().callsArgWith(1, null);
+      recryptd._initZmqSubSocket = sinon.stub();
+      recryptd._checkSyncedAndSubscribeZmqEvents = sinon.stub();
+      recryptd._checkReindex = sinon.stub().callsArgWith(1, null);
+      recryptd._spawnChildProcess(function(err, node) {
         should.not.exist(err);
         spawn.callCount.should.equal(1);
         spawn.args[0][0].should.equal('testexec');
@@ -1773,21 +1773,21 @@ describe('Bitcoin Service', function() {
         spawn.args[0][2].should.deep.equal({
           stdio: 'inherit'
         });
-        qtumd._loadTipFromNode.callCount.should.equal(1);
-        qtumd._initZmqSubSocket.callCount.should.equal(1);
-        should.exist(qtumd._initZmqSubSocket.args[0][0].client);
-        qtumd._initZmqSubSocket.args[0][1].should.equal('tcp://127.0.0.1:30001');
-        qtumd._checkSyncedAndSubscribeZmqEvents.callCount.should.equal(1);
-        should.exist(qtumd._checkSyncedAndSubscribeZmqEvents.args[0][0].client);
+        recryptd._loadTipFromNode.callCount.should.equal(1);
+        recryptd._initZmqSubSocket.callCount.should.equal(1);
+        should.exist(recryptd._initZmqSubSocket.args[0][0].client);
+        recryptd._initZmqSubSocket.args[0][1].should.equal('tcp://127.0.0.1:30001');
+        recryptd._checkSyncedAndSubscribeZmqEvents.callCount.should.equal(1);
+        should.exist(recryptd._checkSyncedAndSubscribeZmqEvents.args[0][0].client);
         should.exist(node);
         should.exist(node.client);
         done();
       });
     });
-    it('will respawn qtumd spawned process', function(done) {
+    it('will respawn recryptd spawned process', function(done) {
       var process = new EventEmitter();
       var spawn = sinon.stub().returns(process);
-      var TestBitcoinService = proxyquire('../../lib/services/qtumd', {
+      var TestBitcoinService = proxyquire('../../lib/services/recryptd', {
         fs: {
           readFileSync: readFileSync
         },
@@ -1795,27 +1795,27 @@ describe('Bitcoin Service', function() {
           spawn: spawn
         }
       });
-      var qtumd = new TestBitcoinService(baseConfig);
-      qtumd._loadSpawnConfiguration = sinon.stub();
-      qtumd.spawn = {};
-      qtumd.spawn.exec = 'qtumd';
-      qtumd.spawn.datadir = '/tmp/bitcoin';
-      qtumd.spawn.configPath = '/tmp/bitcoin/bitcoin.conf';
-      qtumd.spawn.config = {};
-      qtumd.spawnRestartTime = 1;
-      qtumd._loadTipFromNode = sinon.stub().callsArg(1);
-      qtumd._initZmqSubSocket = sinon.stub();
-      qtumd._checkReindex = sinon.stub().callsArg(1);
-      qtumd._checkSyncedAndSubscribeZmqEvents = sinon.stub();
-      qtumd._stopSpawnedBitcoin = sinon.stub().callsArg(0);
-      sinon.spy(qtumd, '_spawnChildProcess');
-      qtumd._spawnChildProcess(function(err) {
+      var recryptd = new TestBitcoinService(baseConfig);
+      recryptd._loadSpawnConfiguration = sinon.stub();
+      recryptd.spawn = {};
+      recryptd.spawn.exec = 'recryptd';
+      recryptd.spawn.datadir = '/tmp/bitcoin';
+      recryptd.spawn.configPath = '/tmp/bitcoin/bitcoin.conf';
+      recryptd.spawn.config = {};
+      recryptd.spawnRestartTime = 1;
+      recryptd._loadTipFromNode = sinon.stub().callsArg(1);
+      recryptd._initZmqSubSocket = sinon.stub();
+      recryptd._checkReindex = sinon.stub().callsArg(1);
+      recryptd._checkSyncedAndSubscribeZmqEvents = sinon.stub();
+      recryptd._stopSpawnedBitcoin = sinon.stub().callsArg(0);
+      sinon.spy(recryptd, '_spawnChildProcess');
+      recryptd._spawnChildProcess(function(err) {
         if (err) {
           return done(err);
         }
         process.once('exit', function() {
           setTimeout(function() {
-            qtumd._spawnChildProcess.callCount.should.equal(2);
+            recryptd._spawnChildProcess.callCount.should.equal(2);
             done();
           }, 5);
         });
@@ -1825,7 +1825,7 @@ describe('Bitcoin Service', function() {
     it('will emit error during respawn', function(done) {
       var process = new EventEmitter();
       var spawn = sinon.stub().returns(process);
-      var TestBitcoinService = proxyquire('../../lib/services/qtumd', {
+      var TestBitcoinService = proxyquire('../../lib/services/recryptd', {
         fs: {
           readFileSync: readFileSync
         },
@@ -1833,26 +1833,26 @@ describe('Bitcoin Service', function() {
           spawn: spawn
         }
       });
-      var qtumd = new TestBitcoinService(baseConfig);
-      qtumd._loadSpawnConfiguration = sinon.stub();
-      qtumd.spawn = {};
-      qtumd.spawn.exec = 'qtumd';
-      qtumd.spawn.datadir = '/tmp/bitcoin';
-      qtumd.spawn.configPath = '/tmp/bitcoin/bitcoin.conf';
-      qtumd.spawn.config = {};
-      qtumd.spawnRestartTime = 1;
-      qtumd._loadTipFromNode = sinon.stub().callsArg(1);
-      qtumd._initZmqSubSocket = sinon.stub();
-      qtumd._checkReindex = sinon.stub().callsArg(1);
-      qtumd._checkSyncedAndSubscribeZmqEvents = sinon.stub();
-      qtumd._stopSpawnedBitcoin = sinon.stub().callsArg(0);
-      sinon.spy(qtumd, '_spawnChildProcess');
-      qtumd._spawnChildProcess(function(err) {
+      var recryptd = new TestBitcoinService(baseConfig);
+      recryptd._loadSpawnConfiguration = sinon.stub();
+      recryptd.spawn = {};
+      recryptd.spawn.exec = 'recryptd';
+      recryptd.spawn.datadir = '/tmp/bitcoin';
+      recryptd.spawn.configPath = '/tmp/bitcoin/bitcoin.conf';
+      recryptd.spawn.config = {};
+      recryptd.spawnRestartTime = 1;
+      recryptd._loadTipFromNode = sinon.stub().callsArg(1);
+      recryptd._initZmqSubSocket = sinon.stub();
+      recryptd._checkReindex = sinon.stub().callsArg(1);
+      recryptd._checkSyncedAndSubscribeZmqEvents = sinon.stub();
+      recryptd._stopSpawnedBitcoin = sinon.stub().callsArg(0);
+      sinon.spy(recryptd, '_spawnChildProcess');
+      recryptd._spawnChildProcess(function(err) {
         if (err) {
           return done(err);
         }
-        qtumd._spawnChildProcess = sinon.stub().callsArgWith(0, new Error('test'));
-        qtumd.on('error', function(err) {
+        recryptd._spawnChildProcess = sinon.stub().callsArgWith(0, new Error('test'));
+        recryptd.on('error', function(err) {
           err.should.be.instanceOf(Error);
           err.message.should.equal('test');
           done();
@@ -1860,10 +1860,10 @@ describe('Bitcoin Service', function() {
         process.emit('exit', 1);
       });
     });
-    it('will NOT respawn qtumd spawned process if shutting down', function(done) {
+    it('will NOT respawn recryptd spawned process if shutting down', function(done) {
       var process = new EventEmitter();
       var spawn = sinon.stub().returns(process);
-      var TestBitcoinService = proxyquire('../../lib/services/qtumd', {
+      var TestBitcoinService = proxyquire('../../lib/services/recryptd', {
         fs: {
           readFileSync: readFileSync
         },
@@ -1880,28 +1880,28 @@ describe('Bitcoin Service', function() {
           exec: 'testpath'
         }
       };
-      var qtumd = new TestBitcoinService(config);
-      qtumd._loadSpawnConfiguration = sinon.stub();
-      qtumd.spawn = {};
-      qtumd.spawn.exec = 'qtumd';
-      qtumd.spawn.datadir = '/tmp/bitcoin';
-      qtumd.spawn.configPath = '/tmp/bitcoin/bitcoin.conf';
-      qtumd.spawn.config = {};
-      qtumd.spawnRestartTime = 1;
-      qtumd._loadTipFromNode = sinon.stub().callsArg(1);
-      qtumd._initZmqSubSocket = sinon.stub();
-      qtumd._checkReindex = sinon.stub().callsArg(1);
-      qtumd._checkSyncedAndSubscribeZmqEvents = sinon.stub();
-      qtumd._stopSpawnedBitcoin = sinon.stub().callsArg(0);
-      sinon.spy(qtumd, '_spawnChildProcess');
-      qtumd._spawnChildProcess(function(err) {
+      var recryptd = new TestBitcoinService(config);
+      recryptd._loadSpawnConfiguration = sinon.stub();
+      recryptd.spawn = {};
+      recryptd.spawn.exec = 'recryptd';
+      recryptd.spawn.datadir = '/tmp/bitcoin';
+      recryptd.spawn.configPath = '/tmp/bitcoin/bitcoin.conf';
+      recryptd.spawn.config = {};
+      recryptd.spawnRestartTime = 1;
+      recryptd._loadTipFromNode = sinon.stub().callsArg(1);
+      recryptd._initZmqSubSocket = sinon.stub();
+      recryptd._checkReindex = sinon.stub().callsArg(1);
+      recryptd._checkSyncedAndSubscribeZmqEvents = sinon.stub();
+      recryptd._stopSpawnedBitcoin = sinon.stub().callsArg(0);
+      sinon.spy(recryptd, '_spawnChildProcess');
+      recryptd._spawnChildProcess(function(err) {
         if (err) {
           return done(err);
         }
-        qtumd.node.stopping = true;
+        recryptd.node.stopping = true;
         process.once('exit', function() {
           setTimeout(function() {
-            qtumd._spawnChildProcess.callCount.should.equal(1);
+            recryptd._spawnChildProcess.callCount.should.equal(1);
             done();
           }, 5);
         });
@@ -1911,7 +1911,7 @@ describe('Bitcoin Service', function() {
     it('will give error after 60 retries', function(done) {
       var process = new EventEmitter();
       var spawn = sinon.stub().returns(process);
-      var TestBitcoinService = proxyquire('../../lib/services/qtumd', {
+      var TestBitcoinService = proxyquire('../../lib/services/recryptd', {
         fs: {
           readFileSync: readFileSync
         },
@@ -1919,21 +1919,21 @@ describe('Bitcoin Service', function() {
           spawn: spawn
         }
       });
-      var qtumd = new TestBitcoinService(baseConfig);
-      qtumd.startRetryInterval = 1;
-      qtumd._loadSpawnConfiguration = sinon.stub();
-      qtumd.spawn = {};
-      qtumd.spawn.exec = 'testexec';
-      qtumd.spawn.configPath = 'testdir/bitcoin.conf';
-      qtumd.spawn.datadir = 'testdir';
-      qtumd.spawn.config = {};
-      qtumd.spawn.config.rpcport = 20001;
-      qtumd.spawn.config.rpcuser = 'bitcoin';
-      qtumd.spawn.config.rpcpassword = 'password';
-      qtumd.spawn.config.zmqpubrawtx = 'tcp://127.0.0.1:30001';
-      qtumd._loadTipFromNode = sinon.stub().callsArgWith(1, new Error('test'));
-      qtumd._spawnChildProcess(function(err) {
-        qtumd._loadTipFromNode.callCount.should.equal(60);
+      var recryptd = new TestBitcoinService(baseConfig);
+      recryptd.startRetryInterval = 1;
+      recryptd._loadSpawnConfiguration = sinon.stub();
+      recryptd.spawn = {};
+      recryptd.spawn.exec = 'testexec';
+      recryptd.spawn.configPath = 'testdir/bitcoin.conf';
+      recryptd.spawn.datadir = 'testdir';
+      recryptd.spawn.config = {};
+      recryptd.spawn.config.rpcport = 20001;
+      recryptd.spawn.config.rpcuser = 'bitcoin';
+      recryptd.spawn.config.rpcpassword = 'password';
+      recryptd.spawn.config.zmqpubrawtx = 'tcp://127.0.0.1:30001';
+      recryptd._loadTipFromNode = sinon.stub().callsArgWith(1, new Error('test'));
+      recryptd._spawnChildProcess(function(err) {
+        recryptd._loadTipFromNode.callCount.should.equal(60);
         err.should.be.instanceof(Error);
         done();
       });
@@ -1941,7 +1941,7 @@ describe('Bitcoin Service', function() {
     it('will give error from check reindex', function(done) {
       var process = new EventEmitter();
       var spawn = sinon.stub().returns(process);
-      var TestBitcoinService = proxyquire('../../lib/services/qtumd', {
+      var TestBitcoinService = proxyquire('../../lib/services/recryptd', {
         fs: {
           readFileSync: readFileSync
         },
@@ -1949,25 +1949,25 @@ describe('Bitcoin Service', function() {
           spawn: spawn
         }
       });
-      var qtumd = new TestBitcoinService(baseConfig);
+      var recryptd = new TestBitcoinService(baseConfig);
 
-      qtumd._loadSpawnConfiguration = sinon.stub();
-      qtumd.spawn = {};
-      qtumd.spawn.exec = 'testexec';
-      qtumd.spawn.configPath = 'testdir/bitcoin.conf';
-      qtumd.spawn.datadir = 'testdir';
-      qtumd.spawn.config = {};
-      qtumd.spawn.config.rpcport = 20001;
-      qtumd.spawn.config.rpcuser = 'bitcoin';
-      qtumd.spawn.config.rpcpassword = 'password';
-      qtumd.spawn.config.zmqpubrawtx = 'tcp://127.0.0.1:30001';
+      recryptd._loadSpawnConfiguration = sinon.stub();
+      recryptd.spawn = {};
+      recryptd.spawn.exec = 'testexec';
+      recryptd.spawn.configPath = 'testdir/bitcoin.conf';
+      recryptd.spawn.datadir = 'testdir';
+      recryptd.spawn.config = {};
+      recryptd.spawn.config.rpcport = 20001;
+      recryptd.spawn.config.rpcuser = 'bitcoin';
+      recryptd.spawn.config.rpcpassword = 'password';
+      recryptd.spawn.config.zmqpubrawtx = 'tcp://127.0.0.1:30001';
 
-      qtumd._loadTipFromNode = sinon.stub().callsArgWith(1, null);
-      qtumd._initZmqSubSocket = sinon.stub();
-      qtumd._checkSyncedAndSubscribeZmqEvents = sinon.stub();
-      qtumd._checkReindex = sinon.stub().callsArgWith(1, new Error('test'));
+      recryptd._loadTipFromNode = sinon.stub().callsArgWith(1, null);
+      recryptd._initZmqSubSocket = sinon.stub();
+      recryptd._checkSyncedAndSubscribeZmqEvents = sinon.stub();
+      recryptd._checkReindex = sinon.stub().callsArgWith(1, new Error('test'));
 
-      qtumd._spawnChildProcess(function(err) {
+      recryptd._spawnChildProcess(function(err) {
         err.should.be.instanceof(Error);
         done();
       });
@@ -1985,39 +1985,39 @@ describe('Bitcoin Service', function() {
           exec: 'testpath'
         }
       };
-      var qtumd = new BitcoinService(config);
-      qtumd.node.stopping = true;
-      qtumd.startRetryInterval = 100;
-      qtumd._loadTipFromNode = sinon.stub();
-      qtumd._connectProcess({}, function(err) {
+      var recryptd = new BitcoinService(config);
+      recryptd.node.stopping = true;
+      recryptd.startRetryInterval = 100;
+      recryptd._loadTipFromNode = sinon.stub();
+      recryptd._connectProcess({}, function(err) {
         err.should.be.instanceof(Error);
         err.message.should.match(/Stopping while trying to connect/);
-        qtumd._loadTipFromNode.callCount.should.equal(0);
+        recryptd._loadTipFromNode.callCount.should.equal(0);
         done();
       });
     });
     it('will give error from loadTipFromNode after 60 retries', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd._loadTipFromNode = sinon.stub().callsArgWith(1, new Error('test'));
-      qtumd.startRetryInterval = 1;
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd._loadTipFromNode = sinon.stub().callsArgWith(1, new Error('test'));
+      recryptd.startRetryInterval = 1;
       var config = {};
-      qtumd._connectProcess(config, function(err) {
+      recryptd._connectProcess(config, function(err) {
         err.should.be.instanceof(Error);
-        qtumd._loadTipFromNode.callCount.should.equal(60);
+        recryptd._loadTipFromNode.callCount.should.equal(60);
         done();
       });
     });
     it('will init zmq/rpc on node', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd._initZmqSubSocket = sinon.stub();
-      qtumd._subscribeZmqEvents = sinon.stub();
-      qtumd._loadTipFromNode = sinon.stub().callsArgWith(1, null);
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd._initZmqSubSocket = sinon.stub();
+      recryptd._subscribeZmqEvents = sinon.stub();
+      recryptd._loadTipFromNode = sinon.stub().callsArgWith(1, null);
       var config = {};
-      qtumd._connectProcess(config, function(err, node) {
+      recryptd._connectProcess(config, function(err, node) {
         should.not.exist(err);
-        qtumd._loadTipFromNode.callCount.should.equal(1);
-        qtumd._initZmqSubSocket.callCount.should.equal(1);
-        qtumd._loadTipFromNode.callCount.should.equal(1);
+        recryptd._loadTipFromNode.callCount.should.equal(1);
+        recryptd._initZmqSubSocket.callCount.should.equal(1);
+        recryptd._loadTipFromNode.callCount.should.equal(1);
         should.exist(node);
         should.exist(node.client);
         done();
@@ -2034,69 +2034,69 @@ describe('Bitcoin Service', function() {
       sandbox.restore();
     });
     it('will give error if "spawn" and "connect" are both not configured', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.options = {};
-      qtumd.start(function(err) {
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.options = {};
+      recryptd.start(function(err) {
         err.should.be.instanceof(Error);
         err.message.should.match(/Bitcoin configuration options/);
       });
       done();
     });
     it('will give error from spawnChildProcess', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd._spawnChildProcess = sinon.stub().callsArgWith(0, new Error('test'));
-      qtumd.options = {
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd._spawnChildProcess = sinon.stub().callsArgWith(0, new Error('test'));
+      recryptd.options = {
         spawn: {}
       };
-      qtumd.start(function(err) {
+      recryptd.start(function(err) {
         err.should.be.instanceof(Error);
         err.message.should.equal('test');
         done();
       });
     });
     it('will give error from connectProcess', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd._connectProcess = sinon.stub().callsArgWith(1, new Error('test'));
-      qtumd.options = {
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd._connectProcess = sinon.stub().callsArgWith(1, new Error('test'));
+      recryptd.options = {
         connect: [
           {}
         ]
       };
-      qtumd.start(function(err) {
-        qtumd._connectProcess.callCount.should.equal(1);
+      recryptd.start(function(err) {
+        recryptd._connectProcess.callCount.should.equal(1);
         err.should.be.instanceof(Error);
         err.message.should.equal('test');
         done();
       });
     });
     it('will push node from spawnChildProcess', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var node = {};
-      qtumd._initChain = sinon.stub().callsArg(0);
-      qtumd._spawnChildProcess = sinon.stub().callsArgWith(0, null, node);
-      qtumd.options = {
+      recryptd._initChain = sinon.stub().callsArg(0);
+      recryptd._spawnChildProcess = sinon.stub().callsArgWith(0, null, node);
+      recryptd.options = {
         spawn: {}
       };
-      qtumd.start(function(err) {
+      recryptd.start(function(err) {
         should.not.exist(err);
-        qtumd.nodes.length.should.equal(1);
+        recryptd.nodes.length.should.equal(1);
         done();
       });
     });
     it('will push node from connectProcess', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd._initChain = sinon.stub().callsArg(0);
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd._initChain = sinon.stub().callsArg(0);
       var nodes = [{}];
-      qtumd._connectProcess = sinon.stub().callsArgWith(1, null, nodes);
-      qtumd.options = {
+      recryptd._connectProcess = sinon.stub().callsArgWith(1, null, nodes);
+      recryptd.options = {
         connect: [
           {}
         ]
       };
-      qtumd.start(function(err) {
+      recryptd.start(function(err) {
         should.not.exist(err);
-        qtumd._connectProcess.callCount.should.equal(1);
-        qtumd.nodes.length.should.equal(1);
+        recryptd._connectProcess.callCount.should.equal(1);
+        recryptd.nodes.length.should.equal(1);
         done();
       });
     });
@@ -2104,18 +2104,18 @@ describe('Bitcoin Service', function() {
 
   describe('#isSynced', function() {
     it('will give error from syncPercentage', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.syncPercentage = sinon.stub().callsArgWith(0, new Error('test'));
-      qtumd.isSynced(function(err) {
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.syncPercentage = sinon.stub().callsArgWith(0, new Error('test'));
+      recryptd.isSynced(function(err) {
         should.exist(err);
         err.message.should.equal('test');
         done();
       });
     });
     it('will give "true" if percentage is 100.00', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.syncPercentage = sinon.stub().callsArgWith(0, null, 100.00);
-      qtumd.isSynced(function(err, synced) {
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.syncPercentage = sinon.stub().callsArgWith(0, null, 100.00);
+      recryptd.isSynced(function(err, synced) {
         if (err) {
           return done(err);
         }
@@ -2124,9 +2124,9 @@ describe('Bitcoin Service', function() {
       });
     });
     it('will give "true" if percentage is 99.98', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.syncPercentage = sinon.stub().callsArgWith(0, null, 99.98);
-      qtumd.isSynced(function(err, synced) {
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.syncPercentage = sinon.stub().callsArgWith(0, null, 99.98);
+      recryptd.isSynced(function(err, synced) {
         if (err) {
           return done(err);
         }
@@ -2135,9 +2135,9 @@ describe('Bitcoin Service', function() {
       });
     });
     it('will give "false" if percentage is 99.49', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.syncPercentage = sinon.stub().callsArgWith(0, null, 99.49);
-      qtumd.isSynced(function(err, synced) {
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.syncPercentage = sinon.stub().callsArgWith(0, null, 99.49);
+      recryptd.isSynced(function(err, synced) {
         if (err) {
           return done(err);
         }
@@ -2146,9 +2146,9 @@ describe('Bitcoin Service', function() {
       });
     });
     it('will give "false" if percentage is 1', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.syncPercentage = sinon.stub().callsArgWith(0, null, 1);
-      qtumd.isSynced(function(err, synced) {
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.syncPercentage = sinon.stub().callsArgWith(0, null, 1);
+      recryptd.isSynced(function(err, synced) {
         if (err) {
           return done(err);
         }
@@ -2160,32 +2160,32 @@ describe('Bitcoin Service', function() {
 
   describe('#syncPercentage', function() {
     it('will give rpc error', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBlockchainInfo = sinon.stub().callsArgWith(0, {message: 'error', code: -1});
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBlockchainInfo: getBlockchainInfo
         }
       });
-      qtumd.syncPercentage(function(err) {
+      recryptd.syncPercentage(function(err) {
         should.exist(err);
         err.should.be.an.instanceof(errors.RPCError);
         done();
       });
     });
     it('will call client getInfo and give result', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBlockchainInfo = sinon.stub().callsArgWith(0, null, {
         result: {
           verificationprogress: '0.983821387'
         }
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBlockchainInfo: getBlockchainInfo
         }
       });
-      qtumd.syncPercentage(function(err, percentage) {
+      recryptd.syncPercentage(function(err, percentage) {
         if (err) {
           return done(err);
         }
@@ -2197,54 +2197,54 @@ describe('Bitcoin Service', function() {
 
   describe('#_normalizeAddressArg', function() {
     it('will turn single address into array', function() {
-      var qtumd = new BitcoinService(baseConfig);
-      var args = qtumd._normalizeAddressArg('address');
+      var recryptd = new BitcoinService(baseConfig);
+      var args = recryptd._normalizeAddressArg('address');
       args.should.deep.equal(['address']);
     });
     it('will keep an array as an array', function() {
-      var qtumd = new BitcoinService(baseConfig);
-      var args = qtumd._normalizeAddressArg(['address', 'address']);
+      var recryptd = new BitcoinService(baseConfig);
+      var args = recryptd._normalizeAddressArg(['address', 'address']);
       args.should.deep.equal(['address', 'address']);
     });
   });
 
   describe('#getAddressBalance', function() {
     it('will give rpc error', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.nodes.push({
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.nodes.push({
         client: {
           getAddressBalance: sinon.stub().callsArgWith(1, {code: -1, message: 'Test error'})
         }
       });
       var address = '1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo';
       var options = {};
-      qtumd.getAddressBalance(address, options, function(err) {
+      recryptd.getAddressBalance(address, options, function(err) {
         err.should.be.instanceof(Error);
         done();
       });
     });
     it('will give balance', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getAddressBalance = sinon.stub().callsArgWith(1, null, {
         result: {
           received: 100000,
           balance: 10000
         }
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getAddressBalance: getAddressBalance
         }
       });
       var address = '1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo';
       var options = {};
-      qtumd.getAddressBalance(address, options, function(err, data) {
+      recryptd.getAddressBalance(address, options, function(err, data) {
         if (err) {
           return done(err);
         }
         data.balance.should.equal(10000);
         data.received.should.equal(100000);
-        qtumd.getAddressBalance(address, options, function(err, data2) {
+        recryptd.getAddressBalance(address, options, function(err, data2) {
           if (err) {
             return done(err);
           }
@@ -2259,8 +2259,8 @@ describe('Bitcoin Service', function() {
 
   describe('#getAddressUnspentOutputs', function() {
     it('will give rpc error', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.nodes.push({
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.nodes.push({
         client: {
           getAddressUtxos: sinon.stub().callsArgWith(1, {code: -1, message: 'Test error'})
         }
@@ -2269,14 +2269,14 @@ describe('Bitcoin Service', function() {
         queryMempool: false
       };
       var address = '1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo';
-      qtumd.getAddressUnspentOutputs(address, options, function(err) {
+      recryptd.getAddressUnspentOutputs(address, options, function(err) {
         should.exist(err);
         err.should.be.instanceof(errors.RPCError);
         done();
       });
     });
     it('will give results from client getaddressutxos', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var expectedUtxos = [
         {
           address: '1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo',
@@ -2287,7 +2287,7 @@ describe('Bitcoin Service', function() {
           height: 207111
         }
       ];
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getAddressUtxos: sinon.stub().callsArgWith(1, null, {
             result: expectedUtxos
@@ -2298,7 +2298,7 @@ describe('Bitcoin Service', function() {
         queryMempool: false
       };
       var address = '1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo';
-      qtumd.getAddressUnspentOutputs(address, options, function(err, utxos) {
+      recryptd.getAddressUnspentOutputs(address, options, function(err, utxos) {
         if (err) {
           return done(err);
         }
@@ -2308,7 +2308,7 @@ describe('Bitcoin Service', function() {
       });
     });
     it('will use cache', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var expectedUtxos = [
         {
           address: '1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo',
@@ -2322,7 +2322,7 @@ describe('Bitcoin Service', function() {
       var getAddressUtxos = sinon.stub().callsArgWith(1, null, {
         result: expectedUtxos
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getAddressUtxos: getAddressUtxos
         }
@@ -2331,14 +2331,14 @@ describe('Bitcoin Service', function() {
         queryMempool: false
       };
       var address = '1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo';
-      qtumd.getAddressUnspentOutputs(address, options, function(err, utxos) {
+      recryptd.getAddressUnspentOutputs(address, options, function(err, utxos) {
         if (err) {
           return done(err);
         }
         utxos.length.should.equal(1);
         utxos.should.deep.equal(expectedUtxos);
         getAddressUtxos.callCount.should.equal(1);
-        qtumd.getAddressUnspentOutputs(address, options, function(err, utxos) {
+        recryptd.getAddressUnspentOutputs(address, options, function(err, utxos) {
           if (err) {
             return done(err);
           }
@@ -2375,7 +2375,7 @@ describe('Bitcoin Service', function() {
           timestamp: 1461342954813
         }
       ];
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var confirmedUtxos = [
         {
           address: '1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo',
@@ -2404,7 +2404,7 @@ describe('Bitcoin Service', function() {
           txid: 'f637384e9f81f18767ea50e00bce58fc9848b6588a1130529eebba22a410155f'
         }
       ];
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getAddressUtxos: sinon.stub().callsArgWith(1, null, {
             result: confirmedUtxos
@@ -2418,7 +2418,7 @@ describe('Bitcoin Service', function() {
         queryMempool: true
       };
       var address = '1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo';
-      qtumd.getAddressUnspentOutputs(address, options, function(err, utxos) {
+      recryptd.getAddressUnspentOutputs(address, options, function(err, utxos) {
         if (err) {
           return done(err);
         }
@@ -2448,7 +2448,7 @@ describe('Bitcoin Service', function() {
           prevout: 2
         }
       ];
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var confirmedUtxos = [
         {
           address: '1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo',
@@ -2467,7 +2467,7 @@ describe('Bitcoin Service', function() {
           height: 207111
         }
       ];
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getAddressUtxos: sinon.stub().callsArgWith(1, null, {
             result: confirmedUtxos
@@ -2481,7 +2481,7 @@ describe('Bitcoin Service', function() {
         queryMempool: true
       };
       var address = '1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo';
-      qtumd.getAddressUnspentOutputs(address, options, function(err, utxos) {
+      recryptd.getAddressUnspentOutputs(address, options, function(err, utxos) {
         if (err) {
           return done(err);
         }
@@ -2527,7 +2527,7 @@ describe('Bitcoin Service', function() {
           timestamp: 1461342833133
         }
       ];
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var confirmedUtxos = [
         {
           address: '1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo',
@@ -2554,7 +2554,7 @@ describe('Bitcoin Service', function() {
           height: 207111
         }
       ];
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getAddressUtxos: sinon.stub().callsArgWith(1, null, {
             result: confirmedUtxos
@@ -2568,7 +2568,7 @@ describe('Bitcoin Service', function() {
         queryMempool: true
       };
       var address = '1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo';
-      qtumd.getAddressUnspentOutputs(address, options, function(err, utxos) {
+      recryptd.getAddressUnspentOutputs(address, options, function(err, utxos) {
         if (err) {
           return done(err);
         }
@@ -2634,9 +2634,9 @@ describe('Bitcoin Service', function() {
           timestamp: 1461342833133
         }
       ];
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var confirmedUtxos = [];
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getAddressUtxos: sinon.stub().callsArgWith(1, null, {
             result: confirmedUtxos
@@ -2650,7 +2650,7 @@ describe('Bitcoin Service', function() {
         queryMempool: true
       };
       var address = '1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo';
-      qtumd.getAddressUnspentOutputs(address, options, function(err, utxos) {
+      recryptd.getAddressUnspentOutputs(address, options, function(err, utxos) {
         if (err) {
           return done(err);
         }
@@ -2675,7 +2675,7 @@ describe('Bitcoin Service', function() {
           prevout: 1
         }
       ];
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var confirmedUtxos = [
         {
           address: '1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo',
@@ -2686,7 +2686,7 @@ describe('Bitcoin Service', function() {
           height: 207111
         }
       ];
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getAddressUtxos: sinon.stub().callsArgWith(1, null, {
             result: confirmedUtxos
@@ -2700,7 +2700,7 @@ describe('Bitcoin Service', function() {
         queryMempool: true
       };
       var address = '1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo';
-      qtumd.getAddressUnspentOutputs(address, options, function(err, utxos) {
+      recryptd.getAddressUnspentOutputs(address, options, function(err, utxos) {
         if (err) {
           return done(err);
         }
@@ -2718,7 +2718,7 @@ describe('Bitcoin Service', function() {
           timestamp: 1461342707725
         }
       ];
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var confirmedUtxos = [
         {
           address: '1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo',
@@ -2729,7 +2729,7 @@ describe('Bitcoin Service', function() {
           height: 207111
         }
       ];
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getAddressUtxos: sinon.stub().callsArgWith(1, null, {
             result: confirmedUtxos
@@ -2743,7 +2743,7 @@ describe('Bitcoin Service', function() {
         queryMempool: true
       };
       var address = '1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo';
-      qtumd.getAddressUnspentOutputs(address, options, function(err, utxos) {
+      recryptd.getAddressUnspentOutputs(address, options, function(err, utxos) {
         if (err) {
           return done(err);
         }
@@ -2752,8 +2752,8 @@ describe('Bitcoin Service', function() {
       });
     });
     it('it will handle error from getAddressMempool', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.nodes.push({
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.nodes.push({
         client: {
           getAddressMempool: sinon.stub().callsArgWith(1, {code: -1, message: 'test'})
         }
@@ -2762,22 +2762,22 @@ describe('Bitcoin Service', function() {
         queryMempool: true
       };
       var address = '1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo';
-      qtumd.getAddressUnspentOutputs(address, options, function(err) {
+      recryptd.getAddressUnspentOutputs(address, options, function(err) {
         err.should.be.instanceOf(Error);
         done();
       });
     });
     it('should set query mempool if undefined', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getAddressMempool = sinon.stub().callsArgWith(1, {code: -1, message: 'test'});
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getAddressMempool: getAddressMempool
         }
       });
       var options = {};
       var address = '1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo';
-      qtumd.getAddressUnspentOutputs(address, options, function(err) {
+      recryptd.getAddressUnspentOutputs(address, options, function(err) {
         getAddressMempool.callCount.should.equal(1);
         done();
       });
@@ -2786,7 +2786,7 @@ describe('Bitcoin Service', function() {
 
   describe('#_getBalanceFromMempool', function() {
     it('will sum satoshis', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var deltas = [
         {
           satoshis: -1000,
@@ -2798,14 +2798,14 @@ describe('Bitcoin Service', function() {
           satoshis: -10,
         }
       ];
-      var sum = qtumd._getBalanceFromMempool(deltas);
+      var sum = recryptd._getBalanceFromMempool(deltas);
       sum.should.equal(990);
     });
   });
 
   describe('#_getTxidsFromMempool', function() {
     it('will filter to txids', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var deltas = [
         {
           txid: 'txid0',
@@ -2817,14 +2817,14 @@ describe('Bitcoin Service', function() {
           txid: 'txid2',
         }
       ];
-      var txids = qtumd._getTxidsFromMempool(deltas);
+      var txids = recryptd._getTxidsFromMempool(deltas);
       txids.length.should.equal(3);
       txids[0].should.equal('txid0');
       txids[1].should.equal('txid1');
       txids[2].should.equal('txid2');
     });
     it('will not include duplicates', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var deltas = [
         {
           txid: 'txid0',
@@ -2836,7 +2836,7 @@ describe('Bitcoin Service', function() {
           txid: 'txid1',
         }
       ];
-      var txids = qtumd._getTxidsFromMempool(deltas);
+      var txids = recryptd._getTxidsFromMempool(deltas);
       txids.length.should.equal(2);
       txids[0].should.equal('txid0');
       txids[1].should.equal('txid1');
@@ -2845,64 +2845,64 @@ describe('Bitcoin Service', function() {
 
   describe('#_getHeightRangeQuery', function() {
     it('will detect range query', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var options = {
         start: 20,
         end: 0
       };
-      var rangeQuery = qtumd._getHeightRangeQuery(options);
+      var rangeQuery = recryptd._getHeightRangeQuery(options);
       rangeQuery.should.equal(true);
     });
     it('will get range properties', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var options = {
         start: 20,
         end: 0
       };
       var clone = {};
-      qtumd._getHeightRangeQuery(options, clone);
+      recryptd._getHeightRangeQuery(options, clone);
       clone.end.should.equal(20);
       clone.start.should.equal(0);
     });
     it('will throw error with invalid range', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var options = {
         start: 0,
         end: 20
       };
       (function() {
-        qtumd._getHeightRangeQuery(options);
+        recryptd._getHeightRangeQuery(options);
       }).should.throw('"end" is expected');
     });
   });
 
   describe('#getAddressTxids', function() {
     it('will give error from _getHeightRangeQuery', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd._getHeightRangeQuery = sinon.stub().throws(new Error('test'));
-      qtumd.getAddressTxids('address', {}, function(err) {
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd._getHeightRangeQuery = sinon.stub().throws(new Error('test'));
+      recryptd.getAddressTxids('address', {}, function(err) {
         err.should.be.instanceOf(Error);
         err.message.should.equal('test');
         done();
       });
     });
     it('will give rpc error from mempool query', function() {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.nodes.push({
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.nodes.push({
         client: {
           getAddressMempool: sinon.stub().callsArgWith(1, {code: -1, message: 'Test error'})
         }
       });
       var options = {};
       var address = '1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo';
-      qtumd.getAddressTxids(address, options, function(err) {
+      recryptd.getAddressTxids(address, options, function(err) {
         should.exist(err);
         err.should.be.instanceof(errors.RPCError);
       });
     });
     it('will give rpc error from txids query', function() {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.nodes.push({
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.nodes.push({
         client: {
           getAddressTxids: sinon.stub().callsArgWith(1, {code: -1, message: 'Test error'})
         }
@@ -2911,7 +2911,7 @@ describe('Bitcoin Service', function() {
         queryMempool: false
       };
       var address = '1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo';
-      qtumd.getAddressTxids(address, options, function(err) {
+      recryptd.getAddressTxids(address, options, function(err) {
         should.exist(err);
         err.should.be.instanceof(errors.RPCError);
       });
@@ -2929,8 +2929,8 @@ describe('Bitcoin Service', function() {
         'ed11a08e3102f9610bda44c80c46781d97936a4290691d87244b1b345b39a693',
         'ec94d845c603f292a93b7c829811ac624b76e52b351617ca5a758e9d61a11681'
       ];
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.nodes.push({
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.nodes.push({
         client: {
           getAddressTxids: sinon.stub().callsArgWith(1, null, {
             result: expectedTxids.reverse()
@@ -2941,7 +2941,7 @@ describe('Bitcoin Service', function() {
         queryMempool: false
       };
       var address = '1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo';
-      qtumd.getAddressTxids(address, options, function(err, txids) {
+      recryptd.getAddressTxids(address, options, function(err, txids) {
         if (err) {
           return done(err);
         }
@@ -2954,11 +2954,11 @@ describe('Bitcoin Service', function() {
       var expectedTxids = [
         'e9dcf22807db77ac0276b03cc2d3a8b03c4837db8ac6650501ef45af1c807cce'
       ];
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getAddressTxids = sinon.stub().callsArgWith(1, null, {
         result: expectedTxids.reverse()
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getAddressTxids: getAddressTxids
         }
@@ -2967,14 +2967,14 @@ describe('Bitcoin Service', function() {
         queryMempool: false
       };
       var address = '1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo';
-      qtumd.getAddressTxids(address, options, function(err, txids) {
+      recryptd.getAddressTxids(address, options, function(err, txids) {
         if (err) {
           return done(err);
         }
         getAddressTxids.callCount.should.equal(1);
         txids.should.deep.equal(expectedTxids);
 
-        qtumd.getAddressTxids(address, options, function(err, txids) {
+        recryptd.getAddressTxids(address, options, function(err, txids) {
           if (err) {
             return done(err);
           }
@@ -2988,12 +2988,12 @@ describe('Bitcoin Service', function() {
       var expectedTxids = [
         'e9dcf22807db77ac0276b03cc2d3a8b03c4837db8ac6650501ef45af1c807cce'
       ];
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getAddressMempool = sinon.stub();
       var getAddressTxids = sinon.stub().callsArgWith(1, null, {
         result: expectedTxids.reverse()
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getAddressTxids: getAddressTxids,
           getAddressMempool: getAddressMempool
@@ -3005,7 +3005,7 @@ describe('Bitcoin Service', function() {
         end: 2
       };
       var address = '1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo';
-      qtumd.getAddressTxids(address, options, function(err, txids) {
+      recryptd.getAddressTxids(address, options, function(err, txids) {
         if (err) {
           return done(err);
         }
@@ -3013,7 +3013,7 @@ describe('Bitcoin Service', function() {
         getAddressMempool.callCount.should.equal(0);
         txids.should.deep.equal(expectedTxids);
 
-        qtumd.getAddressTxids(address, options, function(err, txids) {
+        recryptd.getAddressTxids(address, options, function(err, txids) {
           if (err) {
             return done(err);
           }
@@ -3028,7 +3028,7 @@ describe('Bitcoin Service', function() {
       var expectedTxids = [
         'e9dcf22807db77ac0276b03cc2d3a8b03c4837db8ac6650501ef45af1c807cce'
       ];
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getAddressTxids = sinon.stub().callsArgWith(1, null, {
         result: expectedTxids.reverse()
       });
@@ -3045,21 +3045,21 @@ describe('Bitcoin Service', function() {
           }
         ]
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getAddressTxids: getAddressTxids,
           getAddressMempool: getAddressMempool
         }
       });
       var address = '1Cj4UZWnGWAJH1CweTMgPLQMn26WRMfXmo';
-      qtumd.getAddressTxids(address, {queryMempool: false}, function(err, txids) {
+      recryptd.getAddressTxids(address, {queryMempool: false}, function(err, txids) {
         if (err) {
           return done(err);
         }
         getAddressTxids.callCount.should.equal(1);
         txids.should.deep.equal(expectedTxids);
 
-        qtumd.getAddressTxids(address, {queryMempool: true}, function(err, txids) {
+        recryptd.getAddressTxids(address, {queryMempool: true}, function(err, txids) {
           if (err) {
             return done(err);
           }
@@ -3071,7 +3071,7 @@ describe('Bitcoin Service', function() {
             'e9dcf22807db77ac0276b03cc2d3a8b03c4837db8ac6650501ef45af1c807cce' // confirmed
           ]);
 
-          qtumd.getAddressTxids(address, {queryMempoolOnly: true}, function(err, txids) {
+          recryptd.getAddressTxids(address, {queryMempoolOnly: true}, function(err, txids) {
             if (err) {
               return done(err);
             }
@@ -3099,69 +3099,69 @@ describe('Bitcoin Service', function() {
     it('should get 0 confirmation', function() {
       var tx = new Transaction(txhex);
       tx.height = -1;
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.height = 10;
-      var confirmations = qtumd._getConfirmationsDetail(tx);
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.height = 10;
+      var confirmations = recryptd._getConfirmationsDetail(tx);
       confirmations.should.equal(0);
     });
     it('should get 1 confirmation', function() {
       var tx = new Transaction(txhex);
       tx.height = 10;
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.height = 10;
-      var confirmations = qtumd._getConfirmationsDetail(tx);
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.height = 10;
+      var confirmations = recryptd._getConfirmationsDetail(tx);
       confirmations.should.equal(1);
     });
     it('should get 2 confirmation', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var tx = new Transaction(txhex);
-      qtumd.height = 11;
+      recryptd.height = 11;
       tx.height = 10;
-      var confirmations = qtumd._getConfirmationsDetail(tx);
+      var confirmations = recryptd._getConfirmationsDetail(tx);
       confirmations.should.equal(2);
     });
     it('should get 0 confirmation with overflow', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var tx = new Transaction(txhex);
-      qtumd.height = 3;
+      recryptd.height = 3;
       tx.height = 10;
-      var confirmations = qtumd._getConfirmationsDetail(tx);
+      var confirmations = recryptd._getConfirmationsDetail(tx);
       log.warn.callCount.should.equal(1);
       confirmations.should.equal(0);
     });
     it('should get 1000 confirmation', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var tx = new Transaction(txhex);
-      qtumd.height = 1000;
+      recryptd.height = 1000;
       tx.height = 1;
-      var confirmations = qtumd._getConfirmationsDetail(tx);
+      var confirmations = recryptd._getConfirmationsDetail(tx);
       confirmations.should.equal(1000);
     });
   });
 
   describe('#_getAddressDetailsForInput', function() {
     it('will return if missing an address', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var result = {};
-      qtumd._getAddressDetailsForInput({}, 0, result, []);
+      recryptd._getAddressDetailsForInput({}, 0, result, []);
       should.not.exist(result.addresses);
       should.not.exist(result.satoshis);
     });
     it('will only add address if it matches', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var result = {};
-      qtumd._getAddressDetailsForInput({
+      recryptd._getAddressDetailsForInput({
         address: 'address1'
       }, 0, result, ['address2']);
       should.not.exist(result.addresses);
       should.not.exist(result.satoshis);
     });
     it('will instantiate if outputIndexes not defined', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var result = {
         addresses: {}
       };
-      qtumd._getAddressDetailsForInput({
+      recryptd._getAddressDetailsForInput({
         address: 'address1'
       }, 0, result, ['address1']);
       should.exist(result.addresses);
@@ -3169,7 +3169,7 @@ describe('Bitcoin Service', function() {
       result.addresses['address1'].outputIndexes.should.deep.equal([]);
     });
     it('will push to inputIndexes', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var result = {
         addresses: {
           'address1': {
@@ -3177,7 +3177,7 @@ describe('Bitcoin Service', function() {
           }
         }
       };
-      qtumd._getAddressDetailsForInput({
+      recryptd._getAddressDetailsForInput({
         address: 'address1'
       }, 2, result, ['address1']);
       should.exist(result.addresses);
@@ -3187,27 +3187,27 @@ describe('Bitcoin Service', function() {
 
   describe('#_getAddressDetailsForOutput', function() {
     it('will return if missing an address', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var result = {};
-      qtumd._getAddressDetailsForOutput({}, 0, result, []);
+      recryptd._getAddressDetailsForOutput({}, 0, result, []);
       should.not.exist(result.addresses);
       should.not.exist(result.satoshis);
     });
     it('will only add address if it matches', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var result = {};
-      qtumd._getAddressDetailsForOutput({
+      recryptd._getAddressDetailsForOutput({
         address: 'address1'
       }, 0, result, ['address2']);
       should.not.exist(result.addresses);
       should.not.exist(result.satoshis);
     });
     it('will instantiate if outputIndexes not defined', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var result = {
         addresses: {}
       };
-      qtumd._getAddressDetailsForOutput({
+      recryptd._getAddressDetailsForOutput({
         address: 'address1'
       }, 0, result, ['address1']);
       should.exist(result.addresses);
@@ -3215,7 +3215,7 @@ describe('Bitcoin Service', function() {
       result.addresses['address1'].outputIndexes.should.deep.equal([0]);
     });
     it('will push if outputIndexes defined', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var result = {
         addresses: {
           'address1': {
@@ -3223,7 +3223,7 @@ describe('Bitcoin Service', function() {
           }
         }
       };
-      qtumd._getAddressDetailsForOutput({
+      recryptd._getAddressDetailsForOutput({
         address: 'address1'
       }, 1, result, ['address1']);
       should.exist(result.addresses);
@@ -3265,9 +3265,9 @@ describe('Bitcoin Service', function() {
         ],
         locktime: 0
       };
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var addresses = ['mgY65WSfEmsyYaYPQaXhmXMeBhwp4EcsQW'];
-      var details = qtumd._getAddressDetailsForTransaction(tx, addresses);
+      var details = recryptd._getAddressDetailsForTransaction(tx, addresses);
       should.exist(details.addresses['mgY65WSfEmsyYaYPQaXhmXMeBhwp4EcsQW']);
       details.addresses['mgY65WSfEmsyYaYPQaXhmXMeBhwp4EcsQW'].inputIndexes.should.deep.equal([0]);
       details.addresses['mgY65WSfEmsyYaYPQaXhmXMeBhwp4EcsQW'].outputIndexes.should.deep.equal([
@@ -3284,15 +3284,15 @@ describe('Bitcoin Service', function() {
       var tx = {
         height: 20,
       };
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.getDetailedTransaction = sinon.stub().callsArgWith(1, null, tx);
-      qtumd.height = 300;
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.getDetailedTransaction = sinon.stub().callsArgWith(1, null, tx);
+      recryptd.height = 300;
       var addresses = {};
-      qtumd._getAddressDetailsForTransaction = sinon.stub().returns({
+      recryptd._getAddressDetailsForTransaction = sinon.stub().returns({
         addresses: addresses,
         satoshis: 1000,
       });
-      qtumd._getAddressDetailedTransaction(txid, {}, function(err, details) {
+      recryptd._getAddressDetailedTransaction(txid, {}, function(err, details) {
         if (err) {
           return done(err);
         }
@@ -3305,9 +3305,9 @@ describe('Bitcoin Service', function() {
     });
     it('give error from getDetailedTransaction', function(done) {
       var txid = '46f24e0c274fc07708b781963576c4c5d5625d926dbb0a17fa865dcd9fe58ea0';
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.getDetailedTransaction = sinon.stub().callsArgWith(1, new Error('test'));
-      qtumd._getAddressDetailedTransaction(txid, {}, function(err) {
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.getDetailedTransaction = sinon.stub().callsArgWith(1, new Error('test'));
+      recryptd._getAddressDetailedTransaction(txid, {}, function(err) {
         err.should.be.instanceof(Error);
         done();
       });
@@ -3320,8 +3320,8 @@ describe('Bitcoin Service', function() {
         bitcore.Address('1AGNa15ZQXAZUgFiqJ2i7Z2DPU2J6hW62i'),
         bitcore.Address('3CMNFxN1oHBc4R1EpboAL5yzHGgE611Xou'),
       ];
-      var qtumd = new BitcoinService(baseConfig);
-      var strings = qtumd._getAddressStrings(addresses);
+      var recryptd = new BitcoinService(baseConfig);
+      var strings = recryptd._getAddressStrings(addresses);
       strings[0].should.equal('1AGNa15ZQXAZUgFiqJ2i7Z2DPU2J6hW62i');
       strings[1].should.equal('3CMNFxN1oHBc4R1EpboAL5yzHGgE611Xou');
     });
@@ -3330,8 +3330,8 @@ describe('Bitcoin Service', function() {
         '1AGNa15ZQXAZUgFiqJ2i7Z2DPU2J6hW62i',
         '3CMNFxN1oHBc4R1EpboAL5yzHGgE611Xou',
       ];
-      var qtumd = new BitcoinService(baseConfig);
-      var strings = qtumd._getAddressStrings(addresses);
+      var recryptd = new BitcoinService(baseConfig);
+      var strings = recryptd._getAddressStrings(addresses);
       strings[0].should.equal('1AGNa15ZQXAZUgFiqJ2i7Z2DPU2J6hW62i');
       strings[1].should.equal('3CMNFxN1oHBc4R1EpboAL5yzHGgE611Xou');
     });
@@ -3340,8 +3340,8 @@ describe('Bitcoin Service', function() {
         bitcore.Address('1AGNa15ZQXAZUgFiqJ2i7Z2DPU2J6hW62i'),
         '3CMNFxN1oHBc4R1EpboAL5yzHGgE611Xou',
       ];
-      var qtumd = new BitcoinService(baseConfig);
-      var strings = qtumd._getAddressStrings(addresses);
+      var recryptd = new BitcoinService(baseConfig);
+      var strings = recryptd._getAddressStrings(addresses);
       strings[0].should.equal('1AGNa15ZQXAZUgFiqJ2i7Z2DPU2J6hW62i');
       strings[1].should.equal('3CMNFxN1oHBc4R1EpboAL5yzHGgE611Xou');
     });
@@ -3350,43 +3350,43 @@ describe('Bitcoin Service', function() {
         bitcore.Address('1AGNa15ZQXAZUgFiqJ2i7Z2DPU2J6hW62i'),
         0,
       ];
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       (function() {
-        qtumd._getAddressStrings(addresses);
+        recryptd._getAddressStrings(addresses);
       }).should.throw(TypeError);
     });
   });
 
   describe('#_paginateTxids', function() {
     it('slice txids based on "from" and "to" (3 to 13)', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var txids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-      var paginated = qtumd._paginateTxids(txids, 3, 13);
+      var paginated = recryptd._paginateTxids(txids, 3, 13);
       paginated.should.deep.equal([3, 4, 5, 6, 7, 8, 9, 10]);
     });
     it('slice txids based on "from" and "to" (0 to 3)', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var txids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-      var paginated = qtumd._paginateTxids(txids, 0, 3);
+      var paginated = recryptd._paginateTxids(txids, 0, 3);
       paginated.should.deep.equal([0, 1, 2]);
     });
     it('slice txids based on "from" and "to" (0 to 1)', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var txids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-      var paginated = qtumd._paginateTxids(txids, 0, 1);
+      var paginated = recryptd._paginateTxids(txids, 0, 1);
       paginated.should.deep.equal([0]);
     });
     it('will throw error if "from" is greater than "to"', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var txids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
       (function() {
-        qtumd._paginateTxids(txids, 1, 0);
+        recryptd._paginateTxids(txids, 1, 0);
       }).should.throw('"from" (1) is expected to be less than "to"');
     });
     it('will handle string numbers', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var txids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-      var paginated = qtumd._paginateTxids(txids, '1', '3');
+      var paginated = recryptd._paginateTxids(txids, '1', '3');
       paginated.should.deep.equal([1, 2]);
     });
   });
@@ -3394,27 +3394,27 @@ describe('Bitcoin Service', function() {
   describe('#getAddressHistory', function() {
     var address = '12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX';
     it('will give error with "from" and "to" range that exceeds max size', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.getAddressHistory(address, {from: 0, to: 51}, function(err) {
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.getAddressHistory(address, {from: 0, to: 51}, function(err) {
         should.exist(err);
         err.message.match(/^\"from/);
         done();
       });
     });
     it('will give error with "from" and "to" order is reversed', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.getAddressTxids = sinon.stub().callsArgWith(2, null, []);
-      qtumd.getAddressHistory(address, {from: 51, to: 0}, function(err) {
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.getAddressTxids = sinon.stub().callsArgWith(2, null, []);
+      recryptd.getAddressHistory(address, {from: 51, to: 0}, function(err) {
         should.exist(err);
         err.message.match(/^\"from/);
         done();
       });
     });
     it('will give error from _getAddressDetailedTransaction', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.getAddressTxids = sinon.stub().callsArgWith(2, null, ['txid']);
-      qtumd._getAddressDetailedTransaction = sinon.stub().callsArgWith(2, new Error('test'));
-      qtumd.getAddressHistory(address, {}, function(err) {
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.getAddressTxids = sinon.stub().callsArgWith(2, null, ['txid']);
+      recryptd._getAddressDetailedTransaction = sinon.stub().callsArgWith(2, new Error('test'));
+      recryptd.getAddressHistory(address, {}, function(err) {
         should.exist(err);
         err.message.should.equal('test');
         done();
@@ -3425,18 +3425,18 @@ describe('Bitcoin Service', function() {
       for (var i = 0; i < 101; i++) {
         addresses.push(address);
       }
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.maxAddressesQuery = 100;
-      qtumd.getAddressHistory(addresses, {}, function(err) {
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.maxAddressesQuery = 100;
+      recryptd.getAddressHistory(addresses, {}, function(err) {
         should.exist(err);
         err.message.match(/Maximum/);
         done();
       });
     });
     it('give error from getAddressTxids', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.getAddressTxids = sinon.stub().callsArgWith(2, new Error('test'));
-      qtumd.getAddressHistory('address', {}, function(err) {
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.getAddressTxids = sinon.stub().callsArgWith(2, new Error('test'));
+      recryptd.getAddressHistory('address', {}, function(err) {
         should.exist(err);
         err.should.be.instanceof(Error);
         err.message.should.equal('test');
@@ -3444,13 +3444,13 @@ describe('Bitcoin Service', function() {
       });
     });
     it('will paginate', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd._getAddressDetailedTransaction = function(txid, options, callback) {
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd._getAddressDetailedTransaction = function(txid, options, callback) {
         callback(null, txid);
       };
       var txids = ['one', 'two', 'three', 'four'];
-      qtumd.getAddressTxids = sinon.stub().callsArgWith(2, null, txids);
-      qtumd.getAddressHistory('address', {from: 1, to: 3}, function(err, data) {
+      recryptd.getAddressTxids = sinon.stub().callsArgWith(2, null, txids);
+      recryptd.getAddressHistory('address', {from: 1, to: 3}, function(err, data) {
         if (err) {
           return done(err);
         }
@@ -3468,8 +3468,8 @@ describe('Bitcoin Service', function() {
     var memtxid1 = 'b1bfa8dbbde790cb46b9763ef3407c1a21c8264b67bfe224f462ec0e1f569e92';
     var memtxid2 = 'e9dcf22807db77ac0276b03cc2d3a8b03c4837db8ac6650501ef45af1c807cce';
     it('will handle error from getAddressTxids', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.nodes.push({
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.nodes.push({
         client: {
           getAddressMempool: sinon.stub().callsArgWith(1, null, {
             result: [
@@ -3480,11 +3480,11 @@ describe('Bitcoin Service', function() {
           })
         }
       });
-      qtumd.getAddressTxids = sinon.stub().callsArgWith(2, new Error('test'));
-      qtumd.getAddressBalance = sinon.stub().callsArgWith(2, null, {});
+      recryptd.getAddressTxids = sinon.stub().callsArgWith(2, new Error('test'));
+      recryptd.getAddressBalance = sinon.stub().callsArgWith(2, null, {});
       var address = '';
       var options = {};
-      qtumd.getAddressSummary(address, options, function(err) {
+      recryptd.getAddressSummary(address, options, function(err) {
         should.exist(err);
         err.should.be.instanceof(Error);
         err.message.should.equal('test');
@@ -3492,8 +3492,8 @@ describe('Bitcoin Service', function() {
       });
     });
     it('will handle error from getAddressBalance', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.nodes.push({
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.nodes.push({
         client: {
           getAddressMempool: sinon.stub().callsArgWith(1, null, {
             result: [
@@ -3504,11 +3504,11 @@ describe('Bitcoin Service', function() {
           })
         }
       });
-      qtumd.getAddressTxids = sinon.stub().callsArgWith(2, null, {});
-      qtumd.getAddressBalance = sinon.stub().callsArgWith(2, new Error('test'), {});
+      recryptd.getAddressTxids = sinon.stub().callsArgWith(2, null, {});
+      recryptd.getAddressBalance = sinon.stub().callsArgWith(2, new Error('test'), {});
       var address = '';
       var options = {};
-      qtumd.getAddressSummary(address, options, function(err) {
+      recryptd.getAddressSummary(address, options, function(err) {
         should.exist(err);
         err.should.be.instanceof(Error);
         err.message.should.equal('test');
@@ -3516,17 +3516,17 @@ describe('Bitcoin Service', function() {
       });
     });
     it('will handle error from client getAddressMempool', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.nodes.push({
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.nodes.push({
         client: {
           getAddressMempool: sinon.stub().callsArgWith(1, {code: -1, message: 'Test error'})
         }
       });
-      qtumd.getAddressTxids = sinon.stub().callsArgWith(2, null, {});
-      qtumd.getAddressBalance = sinon.stub().callsArgWith(2, null, {});
+      recryptd.getAddressTxids = sinon.stub().callsArgWith(2, null, {});
+      recryptd.getAddressBalance = sinon.stub().callsArgWith(2, null, {});
       var address = '';
       var options = {};
-      qtumd.getAddressSummary(address, options, function(err) {
+      recryptd.getAddressSummary(address, options, function(err) {
         should.exist(err);
         err.should.be.instanceof(Error);
         err.message.should.equal('Test error');
@@ -3534,8 +3534,8 @@ describe('Bitcoin Service', function() {
       });
     });
     it('should set all properties', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.nodes.push({
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.nodes.push({
         client: {
           getAddressMempool: sinon.stub().callsArgWith(1, null, {
             result: [
@@ -3551,18 +3551,18 @@ describe('Bitcoin Service', function() {
           })
         }
       });
-      sinon.spy(qtumd, '_paginateTxids');
-      qtumd.getAddressTxids = sinon.stub().callsArgWith(2, null, [txid1, txid2, txid3]);
-      qtumd.getAddressBalance = sinon.stub().callsArgWith(2, null, {
+      sinon.spy(recryptd, '_paginateTxids');
+      recryptd.getAddressTxids = sinon.stub().callsArgWith(2, null, [txid1, txid2, txid3]);
+      recryptd.getAddressBalance = sinon.stub().callsArgWith(2, null, {
         received: 30 * 1e8,
         balance: 20 * 1e8
       });
       var address = '3NbU8XzUgKyuCgYgZEKsBtUvkTm2r7Xgwj';
       var options = {};
-      qtumd.getAddressSummary(address, options, function(err, summary) {
-        qtumd._paginateTxids.callCount.should.equal(1);
-        qtumd._paginateTxids.args[0][1].should.equal(0);
-        qtumd._paginateTxids.args[0][2].should.equal(1000);
+      recryptd.getAddressSummary(address, options, function(err, summary) {
+        recryptd._paginateTxids.callCount.should.equal(1);
+        recryptd._paginateTxids.args[0][1].should.equal(0);
+        recryptd._paginateTxids.args[0][2].should.equal(1000);
         summary.appearances.should.equal(3);
         summary.totalReceived.should.equal(3000000000);
         summary.totalSpent.should.equal(1000000000);
@@ -3580,8 +3580,8 @@ describe('Bitcoin Service', function() {
       });
     });
     it('will give error with "from" and "to" range that exceeds max size', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.nodes.push({
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.nodes.push({
         client: {
           getAddressMempool: sinon.stub().callsArgWith(1, null, {
             result: [
@@ -3597,8 +3597,8 @@ describe('Bitcoin Service', function() {
           })
         }
       });
-      qtumd.getAddressTxids = sinon.stub().callsArgWith(2, null, [txid1, txid2, txid3]);
-      qtumd.getAddressBalance = sinon.stub().callsArgWith(2, null, {
+      recryptd.getAddressTxids = sinon.stub().callsArgWith(2, null, [txid1, txid2, txid3]);
+      recryptd.getAddressBalance = sinon.stub().callsArgWith(2, null, {
         received: 30 * 1e8,
         balance: 20 * 1e8
       });
@@ -3607,15 +3607,15 @@ describe('Bitcoin Service', function() {
         from: 0,
         to: 1001
       };
-      qtumd.getAddressSummary(address, options, function(err) {
+      recryptd.getAddressSummary(address, options, function(err) {
         should.exist(err);
         err.message.match(/^\"from/);
         done();
       });
     });
     it('will get from cache with noTxList', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.nodes.push({
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.nodes.push({
         client: {
           getAddressMempool: sinon.stub().callsArgWith(1, null, {
             result: [
@@ -3631,8 +3631,8 @@ describe('Bitcoin Service', function() {
           })
         }
       });
-      qtumd.getAddressTxids = sinon.stub().callsArgWith(2, null, [txid1, txid2, txid3]);
-      qtumd.getAddressBalance = sinon.stub().callsArgWith(2, null, {
+      recryptd.getAddressTxids = sinon.stub().callsArgWith(2, null, [txid1, txid2, txid3]);
+      recryptd.getAddressBalance = sinon.stub().callsArgWith(2, null, {
         received: 30 * 1e8,
         balance: 20 * 1e8
       });
@@ -3649,29 +3649,29 @@ describe('Bitcoin Service', function() {
         summary.unconfirmedBalance.should.equal(-900001);
         should.not.exist(summary.txids);
       }
-      qtumd.getAddressSummary(address, options, function(err, summary) {
+      recryptd.getAddressSummary(address, options, function(err, summary) {
         checkSummary(summary);
-        qtumd.getAddressTxids.callCount.should.equal(1);
-        qtumd.getAddressBalance.callCount.should.equal(1);
-        qtumd.getAddressSummary(address, options, function(err, summary) {
+        recryptd.getAddressTxids.callCount.should.equal(1);
+        recryptd.getAddressBalance.callCount.should.equal(1);
+        recryptd.getAddressSummary(address, options, function(err, summary) {
           checkSummary(summary);
-          qtumd.getAddressTxids.callCount.should.equal(1);
-          qtumd.getAddressBalance.callCount.should.equal(1);
+          recryptd.getAddressTxids.callCount.should.equal(1);
+          recryptd.getAddressBalance.callCount.should.equal(1);
           done();
         });
       });
     });
     it('will skip querying the mempool with queryMempool set to false', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getAddressMempool = sinon.stub();
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getAddressMempool: getAddressMempool
         }
       });
-      sinon.spy(qtumd, '_paginateTxids');
-      qtumd.getAddressTxids = sinon.stub().callsArgWith(2, null, [txid1, txid2, txid3]);
-      qtumd.getAddressBalance = sinon.stub().callsArgWith(2, null, {
+      sinon.spy(recryptd, '_paginateTxids');
+      recryptd.getAddressTxids = sinon.stub().callsArgWith(2, null, [txid1, txid2, txid3]);
+      recryptd.getAddressBalance = sinon.stub().callsArgWith(2, null, {
         received: 30 * 1e8,
         balance: 20 * 1e8
       });
@@ -3679,31 +3679,31 @@ describe('Bitcoin Service', function() {
       var options = {
         queryMempool: false
       };
-      qtumd.getAddressSummary(address, options, function() {
+      recryptd.getAddressSummary(address, options, function() {
         getAddressMempool.callCount.should.equal(0);
         done();
       });
     });
     it('will give error from _paginateTxids', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getAddressMempool = sinon.stub();
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getAddressMempool: getAddressMempool
         }
       });
-      sinon.spy(qtumd, '_paginateTxids');
-      qtumd.getAddressTxids = sinon.stub().callsArgWith(2, null, [txid1, txid2, txid3]);
-      qtumd.getAddressBalance = sinon.stub().callsArgWith(2, null, {
+      sinon.spy(recryptd, '_paginateTxids');
+      recryptd.getAddressTxids = sinon.stub().callsArgWith(2, null, [txid1, txid2, txid3]);
+      recryptd.getAddressBalance = sinon.stub().callsArgWith(2, null, {
         received: 30 * 1e8,
         balance: 20 * 1e8
       });
-      qtumd._paginateTxids = sinon.stub().throws(new Error('test'));
+      recryptd._paginateTxids = sinon.stub().throws(new Error('test'));
       var address = '3NbU8XzUgKyuCgYgZEKsBtUvkTm2r7Xgwj';
       var options = {
         queryMempool: false
       };
-      qtumd.getAddressSummary(address, options, function(err) {
+      recryptd.getAddressSummary(address, options, function(err) {
         err.should.be.instanceOf(Error);
         err.message.should.equal('test');
         done();
@@ -3715,53 +3715,53 @@ describe('Bitcoin Service', function() {
     var blockhash = '00000000050a6d07f583beba2d803296eb1e9d4980c4a20f206c584e89a4f02b';
     var blockhex = '0100000000000000000000000000000000000000000000000000000000000000000000003ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a29ab5f49ffff001d1dac2b7c0101000000010000000000000000000000000000000000000000000000000000000000000000ffffffff4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73ffffffff0100f2052a01000000434104678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5fac00000000';
     it('will give rcp error from client getblockhash', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.nodes.push({
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.nodes.push({
         client: {
           getBlockHash: sinon.stub().callsArgWith(1, {code: -1, message: 'Test error'})
         }
       });
-      qtumd.getRawBlock(10, function(err) {
+      recryptd.getRawBlock(10, function(err) {
         should.exist(err);
         err.should.be.instanceof(errors.RPCError);
         done();
       });
     });
     it('will give rcp error from client getblock', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.nodes.push({
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.nodes.push({
         client: {
           getBlock: sinon.stub().callsArgWith(2, {code: -1, message: 'Test error'})
         }
       });
-      qtumd.getRawBlock(blockhash, function(err) {
+      recryptd.getRawBlock(blockhash, function(err) {
         should.exist(err);
         err.should.be.instanceof(errors.RPCError);
         done();
       });
     });
     it('will try all nodes for getblock', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBlockWithError = sinon.stub().callsArgWith(2, {code: -1, message: 'Test error'});
-      qtumd.tryAllInterval = 1;
-      qtumd.nodes.push({
+      recryptd.tryAllInterval = 1;
+      recryptd.nodes.push({
         client: {
           getBlock: getBlockWithError
         }
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBlock: getBlockWithError
         }
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBlock: sinon.stub().callsArgWith(2, null, {
             result: blockhex
           })
         }
       });
-      qtumd.getRawBlock(blockhash, function(err, buffer) {
+      recryptd.getRawBlock(blockhash, function(err, buffer) {
         if (err) {
           return done(err);
         }
@@ -3771,22 +3771,22 @@ describe('Bitcoin Service', function() {
       });
     });
     it('will get block from cache', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBlock = sinon.stub().callsArgWith(2, null, {
         result: blockhex
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBlock: getBlock
         }
       });
-      qtumd.getRawBlock(blockhash, function(err, buffer) {
+      recryptd.getRawBlock(blockhash, function(err, buffer) {
         if (err) {
           return done(err);
         }
         buffer.should.be.instanceof(Buffer);
         getBlock.callCount.should.equal(1);
-        qtumd.getRawBlock(blockhash, function(err, buffer) {
+        recryptd.getRawBlock(blockhash, function(err, buffer) {
           if (err) {
             return done(err);
           }
@@ -3797,20 +3797,20 @@ describe('Bitcoin Service', function() {
       });
     });
     it('will get block by height', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBlock = sinon.stub().callsArgWith(2, null, {
         result: blockhex
       });
       var getBlockHash = sinon.stub().callsArgWith(1, null, {
         result: '000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f'
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBlock: getBlock,
           getBlockHash: getBlockHash
         }
       });
-      qtumd.getRawBlock(0, function(err, buffer) {
+      recryptd.getRawBlock(0, function(err, buffer) {
         if (err) {
           return done(err);
         }
@@ -3825,48 +3825,48 @@ describe('Bitcoin Service', function() {
   describe('#getBlock', function() {
     var blockhex = '0100000000000000000000000000000000000000000000000000000000000000000000003ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a29ab5f49ffff001d1dac2b7c0101000000010000000000000000000000000000000000000000000000000000000000000000ffffffff4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73ffffffff0100f2052a01000000434104678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5fac00000000';
     it('will give an rpc error from client getblock', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBlock = sinon.stub().callsArgWith(2, {code: -1, message: 'Test error'});
       var getBlockHash = sinon.stub().callsArgWith(1, null, {});
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBlock: getBlock,
           getBlockHash: getBlockHash
         }
       });
-      qtumd.getBlock(0, function(err) {
+      recryptd.getBlock(0, function(err) {
         err.should.be.instanceof(Error);
         done();
       });
     });
     it('will give an rpc error from client getblockhash', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBlockHash = sinon.stub().callsArgWith(1, {code: -1, message: 'Test error'});
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBlockHash: getBlockHash
         }
       });
-      qtumd.getBlock(0, function(err) {
+      recryptd.getBlock(0, function(err) {
         err.should.be.instanceof(Error);
         done();
       });
     });
     it('will getblock as bitcore object from height', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBlock = sinon.stub().callsArgWith(2, null, {
         result: blockhex
       });
       var getBlockHash = sinon.stub().callsArgWith(1, null, {
         result: '00000000050a6d07f583beba2d803296eb1e9d4980c4a20f206c584e89a4f02b'
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBlock: getBlock,
           getBlockHash: getBlockHash
         }
       });
-      qtumd.getBlock(0, function(err, block) {
+      recryptd.getBlock(0, function(err, block) {
         should.not.exist(err);
         getBlock.args[0][0].should.equal('00000000050a6d07f583beba2d803296eb1e9d4980c4a20f206c584e89a4f02b');
         getBlock.args[0][1].should.equal(false);
@@ -3875,18 +3875,18 @@ describe('Bitcoin Service', function() {
       });
     });
     it('will getblock as bitcore object', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBlock = sinon.stub().callsArgWith(2, null, {
         result: blockhex
       });
       var getBlockHash = sinon.stub();
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBlock: getBlock,
           getBlockHash: getBlockHash
         }
       });
-      qtumd.getBlock('00000000050a6d07f583beba2d803296eb1e9d4980c4a20f206c584e89a4f02b', function(err, block) {
+      recryptd.getBlock('00000000050a6d07f583beba2d803296eb1e9d4980c4a20f206c584e89a4f02b', function(err, block) {
         should.not.exist(err);
         getBlockHash.callCount.should.equal(0);
         getBlock.callCount.should.equal(1);
@@ -3897,24 +3897,24 @@ describe('Bitcoin Service', function() {
       });
     });
     it('will get block from cache', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBlock = sinon.stub().callsArgWith(2, null, {
         result: blockhex
       });
       var getBlockHash = sinon.stub();
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBlock: getBlock,
           getBlockHash: getBlockHash
         }
       });
       var hash = '00000000050a6d07f583beba2d803296eb1e9d4980c4a20f206c584e89a4f02b';
-      qtumd.getBlock(hash, function(err, block) {
+      recryptd.getBlock(hash, function(err, block) {
         should.not.exist(err);
         getBlockHash.callCount.should.equal(0);
         getBlock.callCount.should.equal(1);
         block.should.be.instanceof(bitcore.Block);
-        qtumd.getBlock(hash, function(err, block) {
+        recryptd.getBlock(hash, function(err, block) {
           should.not.exist(err);
           getBlockHash.callCount.should.equal(0);
           getBlock.callCount.should.equal(1);
@@ -3924,25 +3924,25 @@ describe('Bitcoin Service', function() {
       });
     });
     it('will get block from cache with height (but not height)', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBlock = sinon.stub().callsArgWith(2, null, {
         result: blockhex
       });
       var getBlockHash = sinon.stub().callsArgWith(1, null, {
         result: '00000000050a6d07f583beba2d803296eb1e9d4980c4a20f206c584e89a4f02b'
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBlock: getBlock,
           getBlockHash: getBlockHash
         }
       });
-      qtumd.getBlock(0, function(err, block) {
+      recryptd.getBlock(0, function(err, block) {
         should.not.exist(err);
         getBlockHash.callCount.should.equal(1);
         getBlock.callCount.should.equal(1);
         block.should.be.instanceof(bitcore.Block);
-        qtumd.getBlock(0, function(err, block) {
+        recryptd.getBlock(0, function(err, block) {
           should.not.exist(err);
           getBlockHash.callCount.should.equal(2);
           getBlock.callCount.should.equal(1);
@@ -3955,32 +3955,32 @@ describe('Bitcoin Service', function() {
 
   describe('#getBlockHashesByTimestamp', function() {
     it('should give an rpc error', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBlockHashes = sinon.stub().callsArgWith(3, {message: 'error', code: -1});
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBlockHashes: getBlockHashes
         }
       });
-      qtumd.getBlockHashesByTimestamp(1441911000, 1441914000, function(err, hashes) {
+      recryptd.getBlockHashesByTimestamp(1441911000, 1441914000, function(err, hashes) {
         should.exist(err);
         err.message.should.equal('error');
         done();
       });
     });
     it('should get the correct block hashes', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var block1 = '00000000050a6d07f583beba2d803296eb1e9d4980c4a20f206c584e89a4f02b';
       var block2 = '000000000383752a55a0b2891ce018fd0fdc0b6352502772b034ec282b4a1bf6';
       var getBlockHashes = sinon.stub().callsArgWith(3, null, {
         result: [block2, block1]
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBlockHashes: getBlockHashes
         }
       });
-      qtumd.getBlockHashesByTimestamp(1441914000, 1441911000, function(err, hashes) {
+      recryptd.getBlockHashesByTimestamp(1441914000, 1441911000, function(err, hashes) {
         should.not.exist(err);
         hashes.should.deep.equal([block2, block1]);
         done();
@@ -3991,45 +3991,45 @@ describe('Bitcoin Service', function() {
   describe('#getBlockHeader', function() {
     var blockhash = '00000000050a6d07f583beba2d803296eb1e9d4980c4a20f206c584e89a4f02b';
     it('will give error from getBlockHash', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBlockHash = sinon.stub().callsArgWith(1, {code: -1, message: 'Test error'});
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBlockHash: getBlockHash
         }
       });
-      qtumd.getBlockHeader(10, function(err) {
+      recryptd.getBlockHeader(10, function(err) {
         err.should.be.instanceof(Error);
       });
     });
     it('it will give rpc error from client getblockheader', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBlockHeader = sinon.stub().callsArgWith(1, {code: -1, message: 'Test error'});
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBlockHeader: getBlockHeader
         }
       });
-      qtumd.getBlockHeader(blockhash, function(err) {
+      recryptd.getBlockHeader(blockhash, function(err) {
         err.should.be.instanceof(Error);
       });
     });
     it('it will give rpc error from client getblockhash', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBlockHeader = sinon.stub();
       var getBlockHash = sinon.stub().callsArgWith(1, {code: -1, message: 'Test error'});
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBlockHeader: getBlockHeader,
           getBlockHash: getBlockHash
         }
       });
-      qtumd.getBlockHeader(0, function(err) {
+      recryptd.getBlockHeader(0, function(err) {
         err.should.be.instanceof(Error);
       });
     });
     it('will give result from client getblockheader (from height)', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var result = {
         hash: '0000000000000a817cd3a74aec2f2246b59eb2cbb1ad730213e6c4a1d68ec2f6',
         version: 536870912,
@@ -4065,20 +4065,20 @@ describe('Bitcoin Service', function() {
       var getBlockHash = sinon.stub().callsArgWith(1, null, {
         result: blockhash
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBlockHeader: getBlockHeader,
           getBlockHash: getBlockHash
         }
       });
-      qtumd.getBlockHeader(0, function(err, blockHeader) {
+      recryptd.getBlockHeader(0, function(err, blockHeader) {
         should.not.exist(err);
         getBlockHeader.args[0][0].should.equal(blockhash);
         blockHeader.should.deep.equal(result);
       });
     });
     it('will give result from client getblockheader (from hash)', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var result = {
         hash: '0000000000000a817cd3a74aec2f2246b59eb2cbb1ad730213e6c4a1d68ec2f6',
         version: 536870912,
@@ -4112,13 +4112,13 @@ describe('Bitcoin Service', function() {
         }
       });
       var getBlockHash = sinon.stub();
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBlockHeader: getBlockHeader,
           getBlockHash: getBlockHash
         }
       });
-      qtumd.getBlockHeader(blockhash, function(err, blockHeader) {
+      recryptd.getBlockHeader(blockhash, function(err, blockHeader) {
         should.not.exist(err);
         getBlockHash.callCount.should.equal(0);
         blockHeader.should.deep.equal(result);
@@ -4128,14 +4128,14 @@ describe('Bitcoin Service', function() {
 
   describe('#_maybeGetBlockHash', function() {
     it('will not get block hash with an address', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBlockHash = sinon.stub();
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBlockHash: getBlockHash
         }
       });
-      qtumd._maybeGetBlockHash('2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br', function(err, hash) {
+      recryptd._maybeGetBlockHash('2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br', function(err, hash) {
         if (err) {
           return done(err);
         }
@@ -4145,14 +4145,14 @@ describe('Bitcoin Service', function() {
       });
     });
     it('will not get block hash with non zero-nine numeric string', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBlockHash = sinon.stub();
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBlockHash: getBlockHash
         }
       });
-      qtumd._maybeGetBlockHash('109a', function(err, hash) {
+      recryptd._maybeGetBlockHash('109a', function(err, hash) {
         if (err) {
           return done(err);
         }
@@ -4162,16 +4162,16 @@ describe('Bitcoin Service', function() {
       });
     });
     it('will get the block hash if argument is a number', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBlockHash = sinon.stub().callsArgWith(1, null, {
         result: 'blockhash'
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBlockHash: getBlockHash
         }
       });
-      qtumd._maybeGetBlockHash(10, function(err, hash) {
+      recryptd._maybeGetBlockHash(10, function(err, hash) {
         if (err) {
           return done(err);
         }
@@ -4181,16 +4181,16 @@ describe('Bitcoin Service', function() {
       });
     });
     it('will get the block hash if argument is a number (as string)', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBlockHash = sinon.stub().callsArgWith(1, null, {
         result: 'blockhash'
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBlockHash: getBlockHash
         }
       });
-      qtumd._maybeGetBlockHash('10', function(err, hash) {
+      recryptd._maybeGetBlockHash('10', function(err, hash) {
         if (err) {
           return done(err);
         }
@@ -4200,23 +4200,23 @@ describe('Bitcoin Service', function() {
       });
     });
     it('will try multiple nodes if one fails', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBlockHash = sinon.stub().callsArgWith(1, null, {
         result: 'blockhash'
       });
       getBlockHash.onCall(0).callsArgWith(1, {code: -1, message: 'test'});
-      qtumd.tryAllInterval = 1;
-      qtumd.nodes.push({
+      recryptd.tryAllInterval = 1;
+      recryptd.nodes.push({
         client: {
           getBlockHash: getBlockHash
         }
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBlockHash: getBlockHash
         }
       });
-      qtumd._maybeGetBlockHash(10, function(err, hash) {
+      recryptd._maybeGetBlockHash(10, function(err, hash) {
         if (err) {
           return done(err);
         }
@@ -4226,20 +4226,20 @@ describe('Bitcoin Service', function() {
       });
     });
     it('will give error from getBlockHash', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBlockHash = sinon.stub().callsArgWith(1, {code: -1, message: 'test'});
-      qtumd.tryAllInterval = 1;
-      qtumd.nodes.push({
+      recryptd.tryAllInterval = 1;
+      recryptd.nodes.push({
         client: {
           getBlockHash: getBlockHash
         }
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBlockHash: getBlockHash
         }
       });
-      qtumd._maybeGetBlockHash(10, function(err, hash) {
+      recryptd._maybeGetBlockHash(10, function(err, hash) {
         getBlockHash.callCount.should.equal(2);
         err.should.be.instanceOf(Error);
         err.message.should.equal('test');
@@ -4252,29 +4252,29 @@ describe('Bitcoin Service', function() {
   describe('#getBlockOverview', function() {
     var blockhash = '00000000050a6d07f583beba2d803296eb1e9d4980c4a20f206c584e89a4f02b';
     it('will handle error from maybeGetBlockHash', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd._maybeGetBlockHash = sinon.stub().callsArgWith(1, new Error('test'));
-      qtumd.getBlockOverview(blockhash, function(err) {
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd._maybeGetBlockHash = sinon.stub().callsArgWith(1, new Error('test'));
+      recryptd.getBlockOverview(blockhash, function(err) {
         err.should.be.instanceOf(Error);
         done();
       });
     });
     it('will give error from client.getBlock', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBlock = sinon.stub().callsArgWith(2, {code: -1, message: 'test'});
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBlock: getBlock
         }
       });
-      qtumd.getBlockOverview(blockhash, function(err) {
+      recryptd.getBlockOverview(blockhash, function(err) {
         err.should.be.instanceOf(Error);
         err.message.should.equal('test');
         done();
       });
     });
     it('will give expected result', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var blockResult = {
         hash: blockhash,
         version: 536870912,
@@ -4293,7 +4293,7 @@ describe('Bitcoin Service', function() {
       var getBlock = sinon.stub().callsArgWith(2, null, {
         result: blockResult
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBlock: getBlock
         }
@@ -4313,12 +4313,12 @@ describe('Bitcoin Service', function() {
         blockOverview.bits.should.equal('1a13ca10');
         blockOverview.difficulty.should.equal(847779.0710240941);
       }
-      qtumd.getBlockOverview(blockhash, function(err, blockOverview) {
+      recryptd.getBlockOverview(blockhash, function(err, blockOverview) {
         if (err) {
           return done(err);
         }
         checkBlock(blockOverview);
-        qtumd.getBlockOverview(blockhash, function(err, blockOverview) {
+        recryptd.getBlockOverview(blockhash, function(err, blockOverview) {
           checkBlock(blockOverview);
           getBlock.callCount.should.equal(1);
           done();
@@ -4329,30 +4329,30 @@ describe('Bitcoin Service', function() {
 
   describe('#estimateFee', function() {
     it('will give rpc error', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var estimateFee = sinon.stub().callsArgWith(1, {message: 'error', code: -1});
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           estimateFee: estimateFee
         }
       });
-      qtumd.estimateFee(1, function(err) {
+      recryptd.estimateFee(1, function(err) {
         should.exist(err);
         err.should.be.an.instanceof(errors.RPCError);
         done();
       });
     });
     it('will call client estimateFee and give result', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var estimateFee = sinon.stub().callsArgWith(1, null, {
         result: -1
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           estimateFee: estimateFee
         }
       });
-      qtumd.estimateFee(1, function(err, feesPerKb) {
+      recryptd.estimateFee(1, function(err, feesPerKb) {
         if (err) {
           return done(err);
         }
@@ -4365,29 +4365,29 @@ describe('Bitcoin Service', function() {
   describe('#sendTransaction', function(done) {
     var tx = bitcore.Transaction(txhex);
     it('will give rpc error', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var sendRawTransaction = sinon.stub().callsArgWith(2, {message: 'error', code: -1});
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           sendRawTransaction: sendRawTransaction
         }
       });
-      qtumd.sendTransaction(txhex, function(err) {
+      recryptd.sendTransaction(txhex, function(err) {
         should.exist(err);
         err.should.be.an.instanceof(errors.RPCError);
       });
     });
     it('will send to client and get hash', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var sendRawTransaction = sinon.stub().callsArgWith(2, null, {
         result: tx.hash
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           sendRawTransaction: sendRawTransaction
         }
       });
-      qtumd.sendTransaction(txhex, function(err, hash) {
+      recryptd.sendTransaction(txhex, function(err, hash) {
         if (err) {
           return done(err);
         }
@@ -4395,16 +4395,16 @@ describe('Bitcoin Service', function() {
       });
     });
     it('will send to client with absurd fees and get hash', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var sendRawTransaction = sinon.stub().callsArgWith(2, null, {
         result: tx.hash
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           sendRawTransaction: sendRawTransaction
         }
       });
-      qtumd.sendTransaction(txhex, {allowAbsurdFees: true}, function(err, hash) {
+      recryptd.sendTransaction(txhex, {allowAbsurdFees: true}, function(err, hash) {
         if (err) {
           return done(err);
         }
@@ -4412,60 +4412,60 @@ describe('Bitcoin Service', function() {
       });
     });
     it('missing callback will throw error', function() {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var sendRawTransaction = sinon.stub().callsArgWith(2, null, {
         result: tx.hash
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           sendRawTransaction: sendRawTransaction
         }
       });
       var transaction = bitcore.Transaction();
       (function() {
-        qtumd.sendTransaction(transaction);
+        recryptd.sendTransaction(transaction);
       }).should.throw(Error);
     });
   });
 
   describe('#getRawTransaction', function() {
     it('will give rpc error', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getRawTransaction = sinon.stub().callsArgWith(1, {message: 'error', code: -1});
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getRawTransaction: getRawTransaction
         }
       });
-      qtumd.getRawTransaction('txid', function(err) {
+      recryptd.getRawTransaction('txid', function(err) {
         should.exist(err);
         err.should.be.an.instanceof(errors.RPCError);
         done();
       });
     });
     it('will try all nodes', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.tryAllInterval = 1;
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.tryAllInterval = 1;
       var getRawTransactionWithError = sinon.stub().callsArgWith(1, {message: 'error', code: -1});
       var getRawTransaction = sinon.stub().callsArgWith(1, null, {
         result: txhex
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getRawTransaction: getRawTransactionWithError
         }
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getRawTransaction: getRawTransactionWithError
         }
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getRawTransaction: getRawTransaction
         }
       });
-      qtumd.getRawTransaction('txid', function(err, tx) {
+      recryptd.getRawTransaction('txid', function(err, tx) {
         if (err) {
           return done(err);
         }
@@ -4475,23 +4475,23 @@ describe('Bitcoin Service', function() {
       });
     });
     it('will get from cache', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getRawTransaction = sinon.stub().callsArgWith(1, null, {
         result: txhex
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getRawTransaction: getRawTransaction
         }
       });
-      qtumd.getRawTransaction('txid', function(err, tx) {
+      recryptd.getRawTransaction('txid', function(err, tx) {
         if (err) {
           return done(err);
         }
         should.exist(tx);
         tx.should.be.an.instanceof(Buffer);
 
-        qtumd.getRawTransaction('txid', function(err, tx) {
+        recryptd.getRawTransaction('txid', function(err, tx) {
           should.exist(tx);
           tx.should.be.an.instanceof(Buffer);
           getRawTransaction.callCount.should.equal(1);
@@ -4503,42 +4503,42 @@ describe('Bitcoin Service', function() {
 
   describe('#getTransaction', function() {
     it('will give rpc error', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getRawTransaction = sinon.stub().callsArgWith(1, {message: 'error', code: -1});
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getRawTransaction: getRawTransaction
         }
       });
-      qtumd.getTransaction('txid', function(err) {
+      recryptd.getTransaction('txid', function(err) {
         should.exist(err);
         err.should.be.an.instanceof(errors.RPCError);
         done();
       });
     });
     it('will try all nodes', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.tryAllInterval = 1;
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.tryAllInterval = 1;
       var getRawTransactionWithError = sinon.stub().callsArgWith(1, {message: 'error', code: -1});
       var getRawTransaction = sinon.stub().callsArgWith(1, null, {
         result: txhex
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getRawTransaction: getRawTransactionWithError
         }
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getRawTransaction: getRawTransactionWithError
         }
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getRawTransaction: getRawTransaction
         }
       });
-      qtumd.getTransaction('txid', function(err, tx) {
+      recryptd.getTransaction('txid', function(err, tx) {
         if (err) {
           return done(err);
         }
@@ -4548,23 +4548,23 @@ describe('Bitcoin Service', function() {
       });
     });
     it('will get from cache', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getRawTransaction = sinon.stub().callsArgWith(1, null, {
         result: txhex
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getRawTransaction: getRawTransaction
         }
       });
-      qtumd.getTransaction('txid', function(err, tx) {
+      recryptd.getTransaction('txid', function(err, tx) {
         if (err) {
           return done(err);
         }
         should.exist(tx);
         tx.should.be.an.instanceof(bitcore.Transaction);
 
-        qtumd.getTransaction('txid', function(err, tx) {
+        recryptd.getTransaction('txid', function(err, tx) {
           should.exist(tx);
           tx.should.be.an.instanceof(bitcore.Transaction);
           getRawTransaction.callCount.should.equal(1);
@@ -4618,25 +4618,25 @@ describe('Bitcoin Service', function() {
       ]
     };
     it('should give a transaction with height and timestamp', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.nodes.push({
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.nodes.push({
         client: {
           getRawTransaction: sinon.stub().callsArgWith(2, {code: -1, message: 'Test error'})
         }
       });
       var txid = '2d950d00494caf6bfc5fff2a3f839f0eb50f663ae85ce092bc5f9d45296ae91f';
-      qtumd.getDetailedTransaction(txid, function(err) {
+      recryptd.getDetailedTransaction(txid, function(err) {
         should.exist(err);
         err.should.be.instanceof(errors.RPCError);
         done();
       });
     });
     it('should give a transaction with all properties', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getRawTransaction = sinon.stub().callsArgWith(2, null, {
         result: rpcRawTransaction
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getRawTransaction: getRawTransaction
         }
@@ -4673,12 +4673,12 @@ describe('Bitcoin Service', function() {
         should.equal(output.spentIndex, 2);
         should.equal(output.spentHeight, 100);
       }
-      qtumd.getDetailedTransaction(txid, function(err, tx) {
+      recryptd.getDetailedTransaction(txid, function(err, tx) {
         if (err) {
           return done(err);
         }
         checkTx(tx);
-        qtumd.getDetailedTransaction(txid, function(err, tx) {
+        recryptd.getDetailedTransaction(txid, function(err, tx) {
           if (err) {
             return done(err);
           }
@@ -4689,7 +4689,7 @@ describe('Bitcoin Service', function() {
       });
     });
     it('should set coinbase to true', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var rawTransaction = JSON.parse((JSON.stringify(rpcRawTransaction)));
       delete rawTransaction.vin[0];
       rawTransaction.vin = [
@@ -4697,7 +4697,7 @@ describe('Bitcoin Service', function() {
           coinbase: 'abcdef'
         }
       ];
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getRawTransaction: sinon.stub().callsArgWith(2, null, {
             result: rawTransaction
@@ -4705,17 +4705,17 @@ describe('Bitcoin Service', function() {
         }
       });
       var txid = '2d950d00494caf6bfc5fff2a3f839f0eb50f663ae85ce092bc5f9d45296ae91f';
-      qtumd.getDetailedTransaction(txid, function(err, tx) {
+      recryptd.getDetailedTransaction(txid, function(err, tx) {
         should.exist(tx);
         should.equal(tx.coinbase, true);
         done();
       });
     });
     it('will not include address if address length is zero', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var rawTransaction = JSON.parse((JSON.stringify(rpcRawTransaction)));
       rawTransaction.vout[0].scriptPubKey.addresses = [];
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getRawTransaction: sinon.stub().callsArgWith(2, null, {
             result: rawTransaction
@@ -4723,17 +4723,17 @@ describe('Bitcoin Service', function() {
         }
       });
       var txid = '2d950d00494caf6bfc5fff2a3f839f0eb50f663ae85ce092bc5f9d45296ae91f';
-      qtumd.getDetailedTransaction(txid, function(err, tx) {
+      recryptd.getDetailedTransaction(txid, function(err, tx) {
         should.exist(tx);
         should.equal(tx.outputs[0].address, null);
         done();
       });
     });
     it('will not include address if address length is greater than 1', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var rawTransaction = JSON.parse((JSON.stringify(rpcRawTransaction)));
       rawTransaction.vout[0].scriptPubKey.addresses = ['one', 'two'];
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getRawTransaction: sinon.stub().callsArgWith(2, null, {
             result: rawTransaction
@@ -4741,17 +4741,17 @@ describe('Bitcoin Service', function() {
         }
       });
       var txid = '2d950d00494caf6bfc5fff2a3f839f0eb50f663ae85ce092bc5f9d45296ae91f';
-      qtumd.getDetailedTransaction(txid, function(err, tx) {
+      recryptd.getDetailedTransaction(txid, function(err, tx) {
         should.exist(tx);
         should.equal(tx.outputs[0].address, null);
         done();
       });
     });
     it('will handle scriptPubKey.addresses not being set', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var rawTransaction = JSON.parse((JSON.stringify(rpcRawTransaction)));
       delete rawTransaction.vout[0].scriptPubKey['addresses'];
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getRawTransaction: sinon.stub().callsArgWith(2, null, {
             result: rawTransaction
@@ -4759,18 +4759,18 @@ describe('Bitcoin Service', function() {
         }
       });
       var txid = '2d950d00494caf6bfc5fff2a3f839f0eb50f663ae85ce092bc5f9d45296ae91f';
-      qtumd.getDetailedTransaction(txid, function(err, tx) {
+      recryptd.getDetailedTransaction(txid, function(err, tx) {
         should.exist(tx);
         should.equal(tx.outputs[0].address, null);
         done();
       });
     });
     it('will not include script if input missing scriptSig or coinbase', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var rawTransaction = JSON.parse((JSON.stringify(rpcRawTransaction)));
       delete rawTransaction.vin[0].scriptSig;
       delete rawTransaction.vin[0].coinbase;
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getRawTransaction: sinon.stub().callsArgWith(2, null, {
             result: rawTransaction
@@ -4778,17 +4778,17 @@ describe('Bitcoin Service', function() {
         }
       });
       var txid = '2d950d00494caf6bfc5fff2a3f839f0eb50f663ae85ce092bc5f9d45296ae91f';
-      qtumd.getDetailedTransaction(txid, function(err, tx) {
+      recryptd.getDetailedTransaction(txid, function(err, tx) {
         should.exist(tx);
         should.equal(tx.inputs[0].script, null);
         done();
       });
     });
     it('will set height to -1 if missing height', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var rawTransaction = JSON.parse((JSON.stringify(rpcRawTransaction)));
       delete rawTransaction.height;
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getRawTransaction: sinon.stub().callsArgWith(2, null, {
             result: rawTransaction
@@ -4796,7 +4796,7 @@ describe('Bitcoin Service', function() {
         }
       });
       var txid = '2d950d00494caf6bfc5fff2a3f839f0eb50f663ae85ce092bc5f9d45296ae91f';
-      qtumd.getDetailedTransaction(txid, function(err, tx) {
+      recryptd.getDetailedTransaction(txid, function(err, tx) {
         should.exist(tx);
         should.equal(tx.height, -1);
         done();
@@ -4806,30 +4806,30 @@ describe('Bitcoin Service', function() {
 
   describe('#getBestBlockHash', function() {
     it('will give rpc error', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBestBlockHash = sinon.stub().callsArgWith(0, {message: 'error', code: -1});
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBestBlockHash: getBestBlockHash
         }
       });
-      qtumd.getBestBlockHash(function(err) {
+      recryptd.getBestBlockHash(function(err) {
         should.exist(err);
         err.should.be.an.instanceof(errors.RPCError);
         done();
       });
     });
     it('will call client getInfo and give result', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getBestBlockHash = sinon.stub().callsArgWith(0, null, {
         result: 'besthash'
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getBestBlockHash: getBestBlockHash
         }
       });
-      qtumd.getBestBlockHash(function(err, hash) {
+      recryptd.getBestBlockHash(function(err, hash) {
         if (err) {
           return done(err);
         }
@@ -4842,35 +4842,35 @@ describe('Bitcoin Service', function() {
 
   describe('#getSpentInfo', function() {
     it('will give rpc error', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getSpentInfo = sinon.stub().callsArgWith(1, {message: 'error', code: -1});
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getSpentInfo: getSpentInfo
         }
       });
-      qtumd.getSpentInfo({}, function(err) {
+      recryptd.getSpentInfo({}, function(err) {
         should.exist(err);
         err.should.be.an.instanceof(errors.RPCError);
         done();
       });
     });
     it('will empty object when not found', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getSpentInfo = sinon.stub().callsArgWith(1, {message: 'test', code: -5});
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getSpentInfo: getSpentInfo
         }
       });
-      qtumd.getSpentInfo({}, function(err, info) {
+      recryptd.getSpentInfo({}, function(err, info) {
         should.not.exist(err);
         info.should.deep.equal({});
         done();
       });
     });
     it('will call client getSpentInfo and give result', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getSpentInfo = sinon.stub().callsArgWith(1, null, {
         result: {
           txid: 'txid',
@@ -4878,12 +4878,12 @@ describe('Bitcoin Service', function() {
           height: 101
         }
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getSpentInfo: getSpentInfo
         }
       });
-      qtumd.getSpentInfo({}, function(err, info) {
+      recryptd.getSpentInfo({}, function(err, info) {
         if (err) {
           return done(err);
         }
@@ -4897,22 +4897,22 @@ describe('Bitcoin Service', function() {
 
   describe('#getInfo', function() {
     it('will give rpc error', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var getInfo = sinon.stub().callsArgWith(0, {message: 'error', code: -1});
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getInfo: getInfo
         }
       });
-      qtumd.getInfo(function(err) {
+      recryptd.getInfo(function(err) {
         should.exist(err);
         err.should.be.an.instanceof(errors.RPCError);
         done();
       });
     });
     it('will call client getInfo and give result', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.node.getNetworkName = sinon.stub().returns('testnet');
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.node.getNetworkName = sinon.stub().returns('testnet');
       var getInfo = sinon.stub().callsArgWith(0, null, {
         result: {
           version: 1,
@@ -4927,12 +4927,12 @@ describe('Bitcoin Service', function() {
           errors: ''
         }
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           getInfo: getInfo
         }
       });
-      qtumd.getInfo(function(err, info) {
+      recryptd.getInfo(function(err, info) {
         if (err) {
           return done(err);
         }
@@ -4955,30 +4955,30 @@ describe('Bitcoin Service', function() {
 
   describe('#generateBlock', function() {
     it('will give rpc error', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var generate = sinon.stub().callsArgWith(1, {message: 'error', code: -1});
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           generate: generate
         }
       });
-      qtumd.generateBlock(10, function(err) {
+      recryptd.generateBlock(10, function(err) {
         should.exist(err);
         err.should.be.an.instanceof(errors.RPCError);
         done();
       });
     });
     it('will call client generate and give result', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
+      var recryptd = new BitcoinService(baseConfig);
       var generate = sinon.stub().callsArgWith(1, null, {
         result: ['hash']
       });
-      qtumd.nodes.push({
+      recryptd.nodes.push({
         client: {
           generate: generate
         }
       });
-      qtumd.generateBlock(10, function(err, hashes) {
+      recryptd.generateBlock(10, function(err, hashes) {
         if (err) {
           return done(err);
         }
@@ -4991,45 +4991,45 @@ describe('Bitcoin Service', function() {
 
   describe('#stop', function() {
     it('will callback if spawn is not set', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.stop(done);
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.stop(done);
     });
     it('will exit spawned process', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.spawn = {};
-      qtumd.spawn.process = new EventEmitter();
-      qtumd.spawn.process.kill = sinon.stub();
-      qtumd.stop(done);
-      qtumd.spawn.process.kill.callCount.should.equal(1);
-      qtumd.spawn.process.kill.args[0][0].should.equal('SIGINT');
-      qtumd.spawn.process.emit('exit', 0);
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.spawn = {};
+      recryptd.spawn.process = new EventEmitter();
+      recryptd.spawn.process.kill = sinon.stub();
+      recryptd.stop(done);
+      recryptd.spawn.process.kill.callCount.should.equal(1);
+      recryptd.spawn.process.kill.args[0][0].should.equal('SIGINT');
+      recryptd.spawn.process.emit('exit', 0);
     });
     it('will give error with non-zero exit status code', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.spawn = {};
-      qtumd.spawn.process = new EventEmitter();
-      qtumd.spawn.process.kill = sinon.stub();
-      qtumd.stop(function(err) {
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.spawn = {};
+      recryptd.spawn.process = new EventEmitter();
+      recryptd.spawn.process.kill = sinon.stub();
+      recryptd.stop(function(err) {
         err.should.be.instanceof(Error);
         err.code.should.equal(1);
         done();
       });
-      qtumd.spawn.process.kill.callCount.should.equal(1);
-      qtumd.spawn.process.kill.args[0][0].should.equal('SIGINT');
-      qtumd.spawn.process.emit('exit', 1);
+      recryptd.spawn.process.kill.callCount.should.equal(1);
+      recryptd.spawn.process.kill.args[0][0].should.equal('SIGINT');
+      recryptd.spawn.process.emit('exit', 1);
     });
     it('will stop after timeout', function(done) {
-      var qtumd = new BitcoinService(baseConfig);
-      qtumd.shutdownTimeout = 300;
-      qtumd.spawn = {};
-      qtumd.spawn.process = new EventEmitter();
-      qtumd.spawn.process.kill = sinon.stub();
-      qtumd.stop(function(err) {
+      var recryptd = new BitcoinService(baseConfig);
+      recryptd.shutdownTimeout = 300;
+      recryptd.spawn = {};
+      recryptd.spawn.process = new EventEmitter();
+      recryptd.spawn.process.kill = sinon.stub();
+      recryptd.stop(function(err) {
         err.should.be.instanceof(Error);
         done();
       });
-      qtumd.spawn.process.kill.callCount.should.equal(1);
-      qtumd.spawn.process.kill.args[0][0].should.equal('SIGINT');
+      recryptd.spawn.process.kill.callCount.should.equal(1);
+      recryptd.spawn.process.kill.args[0][0].should.equal('SIGINT');
     });
   });
 

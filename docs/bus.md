@@ -1,5 +1,5 @@
 # Bus
-The bus provides a way to subscribe to events from any of the services running. It's implemented abstract from transport specific implementation. The primary use of the bus in Qtumcore Node is for subscribing to events via a web socket.
+The bus provides a way to subscribe to events from any of the services running. It's implemented abstract from transport specific implementation. The primary use of the bus in Recryptcore Node is for subscribing to events via a web socket.
 
 ## Opening/Closing
 
@@ -20,11 +20,11 @@ bus.close();
 ```javascript
 
 // subscribe to all transaction events
-bus.subscribe('qtumd/rawtransaction');
+bus.subscribe('recryptd/rawtransaction');
 
 // to subscribe to new block hashes
-bus.subscribe('qtumd/hashblock');
+bus.subscribe('recryptd/hashblock');
 
 // unsubscribe
-bus.unsubscribe('qtumd/rawtransaction');
+bus.unsubscribe('recryptd/rawtransaction');
 ```

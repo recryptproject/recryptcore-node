@@ -14,17 +14,17 @@ A node represents a collection of services that are loaded together. For more in
 
 ```js
 
-var index = require('qtumcore-node');
-var Qtum = index.services.Qtum;
+var index = require('recryptcore-node');
+var Recrypt = index.services.Recrypt;
 var Node = index.Node;
 
 var configuration = {
-  datadir: '/home/user/.qtum',
+  datadir: '/home/user/.recrypt',
   network: 'testnet',
   services: [
     {
-      name: 'qtumd',
-      module: Qtum,
+      name: 'recryptd',
+      module: Recrypt,
       config: {}
     }
   ]
@@ -37,7 +37,7 @@ node.start(function() {
 });
 
 node.on('ready', function() {
-  console.log('Qtumcoin Node Ready');
+  console.log('Recryptcoin Node Ready');
 });
 
 node.on('error', function(err) {

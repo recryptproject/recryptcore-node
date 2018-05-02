@@ -1,23 +1,23 @@
 'use strict';
 
-// To run the tests: $ mocha -R spec regtest/qtumd.js
+// To run the tests: $ mocha -R spec regtest/recryptd.js
 
 var path = require('path');
 var index = require('..');
 var log = index.log;
 
 var chai = require('chai');
-var bitcore = require('qtumcore-lib');
+var bitcore = require('recryptcore-lib');
 var BN = bitcore.crypto.BN;
 var async = require('async');
 var rimraf = require('rimraf');
-var qtumd;
+var recryptd;
 
 /* jshint unused: false */
 var should = chai.should();
 var assert = chai.assert;
 var sinon = require('sinon');
-var BitcoinRPC = require('qtumd-rpc');
+var BitcoinRPC = require('recryptd-rpc');
 var transactionData = [];
 var blockHashes = [];
 var utxos;
@@ -43,10 +43,10 @@ describe('Bitcoind Functionality', function() {
         throw err;
       }
 
-      qtumd = require('../').services.Bitcoin({
+      recryptd = require('../').services.Bitcoin({
         spawn: {
           datadir: datadir,
-          exec: path.resolve(__dirname, '../bin/qtumd')
+          exec: path.resolve(__dirname, '../bin/recryptd')
         },
         node: {
           network: regtestNetwork,
@@ -56,13 +56,13 @@ describe('Bitcoind Functionality', function() {
         }
       });
 
-      qtumd.on('error', function(err) {
+      recryptd.on('error', function(err) {
         log.error('error="%s"', err.message);
       });
 
       log.info('Waiting for Bitcoin Core to initialize...');
 
-      qtumd.start(function() {
+      recryptd.start(function() {
         log.info('Bitcoind started');
 
         client = new BitcoinRPC({
@@ -131,8 +131,8 @@ describe('Bitcoind Functionality', function() {
 
   after(function(done) {
     this.timeout(60000);
-    qtumd.node.stopping = true;
-    qtumd.stop(function(err, result) {
+    recryptd.node.stopping = true;
+    recryptd.stop(function(err, result) {
       done();
     });
   });
@@ -141,7 +141,7 @@ describe('Bitcoind Functionality', function() {
 
     [0,1,2,3,5,6,7,8,9].forEach(function(i) {
       it('generated block ' + i, function(done) {
-        qtumd.getBlock(blockHashes[i], function(err, block) {
+        recryptd.getBlock(blockHashes[i], function(err, block) {
           if (err) {
             throw err;
           }
@@ -156,7 +156,7 @@ describe('Bitcoind Functionality', function() {
   describe('get blocks as buffers', function() {
     [0,1,2,3,5,6,7,8,9].forEach(function(i) {
       it('generated block ' + i, function(done) {
-        qtumd.getRawBlock(blockHashes[i], function(err, block) {
+        recryptd.getRawBlock(blockHashes[i], function(err, block) {
           if (err) {
             throw err;
           }
@@ -170,8 +170,8 @@ describe('Bitcoind Functionality', function() {
 
   describe('get errors as error instances', function() {
     it('will wrap an rpc into a javascript error', function(done) {
-      qtumd.client.getBlock(1000000000, function(err, response) {
-        var error = qtumd._wrapRPCError(err);
+      recryptd.client.getBlock(1000000000, function(err, response) {
+        var error = recryptd._wrapRPCError(err);
         (error instanceof Error).should.equal(true);
         error.message.should.equal(err.message);
         error.code.should.equal(err.code);
@@ -187,7 +187,7 @@ describe('Bitcoind Functionality', function() {
       it('generated block ' + i, function(done) {
         // add the genesis block
         var height = i + 1;
-        qtumd.getBlock(i + 1, function(err, block) {
+        recryptd.getBlock(i + 1, function(err, block) {
           if (err) {
             throw err;
           }
@@ -199,7 +199,7 @@ describe('Bitcoind Functionality', function() {
     });
 
     it('will get error with number greater than tip', function(done) {
-      qtumd.getBlock(1000000000, function(err, response) {
+      recryptd.getBlock(1000000000, function(err, response) {
         should.exist(err);
         err.code.should.equal(-8);
         done();
@@ -214,7 +214,7 @@ describe('Bitcoind Functionality', function() {
         var txhex = transactionData[i];
         var tx = new bitcore.Transaction();
         tx.fromString(txhex);
-        qtumd.getTransaction(tx.hash, function(err, response) {
+        recryptd.getTransaction(tx.hash, function(err, response) {
           if (err) {
             throw err;
           }
@@ -226,7 +226,7 @@ describe('Bitcoind Functionality', function() {
 
     it('will return error if the transaction does not exist', function(done) {
       var txid = '6226c407d0e9705bdd7158e60983e37d0f5d23529086d6672b07d9238d5aa618';
-      qtumd.getTransaction(txid, function(err, response) {
+      recryptd.getTransaction(txid, function(err, response) {
         should.exist(err);
         done();
       });
@@ -239,7 +239,7 @@ describe('Bitcoind Functionality', function() {
         var txhex = transactionData[i];
         var tx = new bitcore.Transaction();
         tx.fromString(txhex);
-        qtumd.getRawTransaction(tx.hash, function(err, response) {
+        recryptd.getRawTransaction(tx.hash, function(err, response) {
           if (err) {
             throw err;
           }
@@ -252,7 +252,7 @@ describe('Bitcoind Functionality', function() {
 
     it('will return error if the transaction does not exist', function(done) {
       var txid = '6226c407d0e9705bdd7158e60983e37d0f5d23529086d6672b07d9238d5aa618';
-      qtumd.getRawTransaction(txid, function(err, response) {
+      recryptd.getRawTransaction(txid, function(err, response) {
         should.exist(err);
         done();
       });
@@ -263,7 +263,7 @@ describe('Bitcoind Functionality', function() {
     var expectedWork = new BN(6);
     [1,2,3,4,5,6,7,8,9].forEach(function(i) {
       it('generate block ' + i, function(done) {
-        qtumd.getBlockHeader(blockHashes[i], function(err, blockIndex) {
+        recryptd.getBlockHeader(blockHashes[i], function(err, blockIndex) {
           if (err) {
             return done(err);
           }
@@ -281,7 +281,7 @@ describe('Bitcoind Functionality', function() {
       });
     });
     it('will get null prevHash for the genesis block', function(done) {
-      qtumd.getBlockHeader(0, function(err, header) {
+      recryptd.getBlockHeader(0, function(err, header) {
         if (err) {
           return done(err);
         }
@@ -291,7 +291,7 @@ describe('Bitcoind Functionality', function() {
       });
     });
     it('will get error for block not found', function(done) {
-      qtumd.getBlockHeader('notahash', function(err, header) {
+      recryptd.getBlockHeader('notahash', function(err, header) {
         should.exist(err);
         done();
       });
@@ -302,7 +302,7 @@ describe('Bitcoind Functionality', function() {
     var expectedWork = new BN(6);
     [2,3,4,5,6,7,8,9].forEach(function(i) {
       it('generate block ' + i, function() {
-        qtumd.getBlockHeader(i, function(err, header) {
+        recryptd.getBlockHeader(i, function(err, header) {
           should.exist(header);
           should.exist(header.chainWork);
           var work = new BN(header.chainWork, 'hex');
@@ -316,7 +316,7 @@ describe('Bitcoind Functionality', function() {
       });
     });
     it('will get error with number greater than tip', function(done) {
-      qtumd.getBlockHeader(100000, function(err, header) {
+      recryptd.getBlockHeader(100000, function(err, header) {
         should.exist(err);
         done();
       });
@@ -335,7 +335,7 @@ describe('Bitcoind Functionality', function() {
       tx.sign(bitcore.PrivateKey.fromWIF(utxos[0].privateKeyWIF));
 
       // test sending the transaction
-      qtumd.sendTransaction(tx.serialize(), function(err, hash) {
+      recryptd.sendTransaction(tx.serialize(), function(err, hash) {
         if (err) {
           return done(err);
         }
@@ -350,7 +350,7 @@ describe('Bitcoind Functionality', function() {
       tx.from(utxos[1]);
       tx.change(privateKey.toAddress());
       tx.to(destKey.toAddress(), utxos[1].amount * 1e8 - 1000);
-      qtumd.sendTransaction(tx.uncheckedSerialize(), function(err, hash) {
+      recryptd.sendTransaction(tx.uncheckedSerialize(), function(err, hash) {
         should.exist(err);
         (err instanceof Error).should.equal(true);
         should.not.exist(hash);
@@ -360,11 +360,11 @@ describe('Bitcoind Functionality', function() {
 
     it('will throw an error for unexpected types (tx decode failed)', function(done) {
       var garbage = new Buffer('abcdef', 'hex');
-      qtumd.sendTransaction(garbage, function(err, hash) {
+      recryptd.sendTransaction(garbage, function(err, hash) {
         should.exist(err);
         should.not.exist(hash);
         var num = 23;
-        qtumd.sendTransaction(num, function(err, hash) {
+        recryptd.sendTransaction(num, function(err, hash) {
           should.exist(err);
           (err instanceof Error).should.equal(true);
           should.not.exist(hash);
@@ -382,11 +382,11 @@ describe('Bitcoind Functionality', function() {
 
       var serialized = tx.serialize();
 
-      qtumd.once('tx', function(buffer) {
+      recryptd.once('tx', function(buffer) {
         buffer.toString('hex').should.equal(serialized);
         done();
       });
-      qtumd.sendTransaction(serialized, function(err, hash) {
+      recryptd.sendTransaction(serialized, function(err, hash) {
         if (err) {
           return done(err);
         }
@@ -398,7 +398,7 @@ describe('Bitcoind Functionality', function() {
 
   describe('fee estimation', function() {
     it('will estimate fees', function(done) {
-      qtumd.estimateFee(1, function(err, fees) {
+      recryptd.estimateFee(1, function(err, fees) {
         if (err) {
           return done(err);
         }
@@ -411,7 +411,7 @@ describe('Bitcoind Functionality', function() {
   describe('tip updates', function() {
     it('will get an event when the tip is new', function(done) {
       this.timeout(4000);
-      qtumd.on('tip', function(height) {
+      recryptd.on('tip', function(height) {
         if (height === 151) {
           done();
         }
@@ -426,7 +426,7 @@ describe('Bitcoind Functionality', function() {
 
   describe('get detailed transaction', function() {
     it('should include details for coinbase tx', function(done) {
-      qtumd.getDetailedTransaction(utxos[0].txid, function(err, tx) {
+      recryptd.getDetailedTransaction(utxos[0].txid, function(err, tx) {
         if (err) {
           return done(err);
         }
@@ -463,7 +463,7 @@ describe('Bitcoind Functionality', function() {
 
   describe('#getInfo', function() {
     it('will get information', function(done) {
-      qtumd.getInfo(function(err, info) {
+      recryptd.getInfo(function(err, info) {
         if (err) {
           return done(err);
         }

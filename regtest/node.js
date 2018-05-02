@@ -9,13 +9,13 @@ var log = index.log;
 log.debug = function() {};
 
 var chai = require('chai');
-var bitcore = require('qtumcore-lib');
+var bitcore = require('recryptcore-lib');
 var rimraf = require('rimraf');
 var node;
 
 var should = chai.should();
 
-var BitcoinRPC = require('qtumd-rpc');
+var BitcoinRPC = require('recryptd-rpc');
 var index = require('..');
 var Transaction = bitcore.Transaction;
 var BitcoreNode = index.Node;
@@ -48,12 +48,12 @@ describe('Node Functionality', function() {
         network: 'regtest',
         services: [
           {
-            name: 'qtumd',
+            name: 'recryptd',
             module: BitcoinService,
             config: {
               spawn: {
                 datadir: datadir,
-                exec: path.resolve(__dirname, '../bin/qtumd')
+                exec: path.resolve(__dirname, '../bin/recryptd')
               }
             }
           }
@@ -84,13 +84,13 @@ describe('Node Functionality', function() {
         });
 
         var syncedHandler = function() {
-          if (node.services.qtumd.height === 150) {
-            node.services.qtumd.removeListener('synced', syncedHandler);
+          if (node.services.recryptd.height === 150) {
+            node.services.recryptd.removeListener('synced', syncedHandler);
             done();
           }
         };
 
-        node.services.qtumd.on('synced', syncedHandler);
+        node.services.recryptd.on('synced', syncedHandler);
 
         client.generate(150, function(err) {
           if (err) {
@@ -119,9 +119,9 @@ describe('Node Functionality', function() {
       var bus = node.openBus();
       var blockExpected;
       var blockReceived;
-      bus.subscribe('qtumd/hashblock');
-      bus.on('qtumd/hashblock', function(data) {
-        bus.unsubscribe('qtumd/hashblock');
+      bus.subscribe('recryptd/hashblock');
+      bus.on('recryptd/hashblock', function(data) {
+        bus.unsubscribe('recryptd/hashblock');
         if (blockExpected) {
           data.should.be.equal(blockExpected);
           done();
@@ -149,8 +149,8 @@ describe('Node Functionality', function() {
     before(function(done) {
       this.timeout(10000);
       address = testKey.toAddress(regtest).toString();
-      var startHeight = node.services.qtumd.height;
-      node.services.qtumd.on('tip', function(height) {
+      var startHeight = node.services.recryptd.height;
+      node.services.recryptd.on('tip', function(height) {
         if (height === startHeight + 3) {
           done();
         }
@@ -248,8 +248,8 @@ describe('Node Functionality', function() {
         /* jshint maxstatements: 50 */
 
         // Finished once all blocks have been mined
-        var startHeight = node.services.qtumd.height;
-        node.services.qtumd.on('tip', function(height) {
+        var startHeight = node.services.recryptd.height;
+        node.services.recryptd.on('tip', function(height) {
           if (height === startHeight + 5) {
             done();
           }
@@ -667,7 +667,7 @@ describe('Node Functionality', function() {
         tx.fee(1000);
         tx.sign(testKey);
 
-        node.services.qtumd.sendTransaction(tx.serialize(), function(err, hash) {
+        node.services.recryptd.sendTransaction(tx.serialize(), function(err, hash) {
           node.getAddressTxids(memAddress, {}, function(err, txids) {
             if (err) {
               return done(err);

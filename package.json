@@ -1,19 +1,19 @@
 {
-  "name": "qtumcore-node",
-  "description": "Full node with extended capabilities using Qtumcore and Qtumcoin Core",
-  "author": "QTUM <foundation@qtum.org>",
+  "name": "recryptcore-node",
+  "description": "Full node with extended capabilities using Recryptcore and Recryptcoin Core",
+  "author": "RECRYPT <foundation@recrypt.org>",
   "version": "0.0.6",
   "main": "./index.js",
-  "repository": "https://github.com/qtumproject/qtumcore-node.git",
-  "homepage": "https://github.com/qtumproject/qtumcore-node",
+  "repository": "https://github.com/recryptproject/recryptcore-node.git",
+  "homepage": "https://github.com/recryptproject/recryptcore-node",
   "bugs": {
-    "url": "https://github.com/qtumproject/qtumcore-node/issues"
+    "url": "https://github.com/recryptproject/recryptcore-node/issues"
   },
   "contributors": [
 
   ],
   "bin": {
-    "qtumcore-node": "./bin/qtumcore-node"
+    "recryptcore-node": "./bin/recryptcore-node"
   },
   "scripts": {
     "test": "mocha -R spec --recursive",
@@ -23,12 +23,12 @@
     "coveralls": "./node_modules/.bin/istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- --recursive -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
   },
   "tags": [
-    "qtum"
+    "recrypt"
   ],
   "dependencies": {
     "async": "^1.3.0",
-    "qtumd-rpc": "https://github.com/qtumproject/qtumd-rpc.git#master",
-    "qtumcore-lib": "https://github.com/qtumproject/qtumcore-lib.git#master",
+    "recryptd-rpc": "https://github.com/recryptproject/recryptd-rpc.git#master",
+    "recryptcore-lib": "https://github.com/recryptproject/recryptcore-lib.git#master",
     "bitcore-lib": "^0.13.13",
     "body-parser": "^1.13.3",
     "colors": "^1.1.2",
